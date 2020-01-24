@@ -1,0 +1,3 @@
+[submodule "src/main/openapi"]
+	path = src/main/openapi
+	url = https://github.com/yoshiki-0428/biztoi_openapi.git
