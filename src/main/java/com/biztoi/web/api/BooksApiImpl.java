@@ -1,4 +1,4 @@
-package com.biztoi;
+package com.biztoi.web.api;
 
 import com.biztoi.api.BooksApi;
 import com.biztoi.api.VolumesApi;

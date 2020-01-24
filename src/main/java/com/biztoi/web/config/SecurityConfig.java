@@ -1,4 +1,4 @@
-package com.biztoi.config;
+package com.biztoi.web.config;
 
 import io.netty.handler.codec.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
