@@ -14,16 +14,14 @@ public class SecurityConfig {
         http.httpBasic().disable();
         http.formLogin().disable();
         http.csrf().disable();
-
-
-
         http.logout().disable();
 
         // Add custom security.
 //        http.authenticationManager(this.authenticationManager);
 //        http.securityContextRepository(this.securityContextRepository);
 
-        // authentication TODO del
+        // authentication
+        // TODO del
         http.authorizeExchange().pathMatchers("/**/**").permitAll();
         http.authorizeExchange().pathMatchers("/api/auth").permitAll();
         http.authorizeExchange().anyExchange().authenticated();

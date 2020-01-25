@@ -1,11 +1,11 @@
-FROM maven:3-jdk-8-alpine
+FROM maven:3-jdk-11-slim
 ADD . /code/
 RUN echo '{ "allow_root": true }' > /root/.bowerrc && \
     cd /code/ && \
     mvn clean package -DskipTests && \
     mv /code/target/*.jar /app.war
 
-FROM openjdk:8-jre-alpine
+FROM maven:3-jdk-11-slim
 ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
     JHIPSTER_SLEEP=0 \
     JAVA_OPTS="-Xms512m -Xmx512m"
