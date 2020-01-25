@@ -4,6 +4,7 @@ jobs:
     machine: true
     steps:
       - checkout
+      - run: git submodule init && git submodule update --init
       - run: docker login registry.gitlab.com -u $DOCKER_USER_GITLAB -p $DOCKER_PASS_GITLAB
       - run: docker build -t registry.gitlab.com/$DOCKER_USER_GITLAB/biztoi_api_java/$CIRCLE_BRANCH .
       - run: docker push registry.gitlab.com/$DOCKER_USER_GITLAB/biztoi_api_mock/$CIRCLE_BRANCH
