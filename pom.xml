@@ -155,18 +155,22 @@
 						</goals>
 						<configuration>
 							<inputSpec>src/main/openapi/reference/google/books.yaml</inputSpec>
+							<templateDirectory></templateDirectory>
 							<generatorName>spring</generatorName>
-							<output>${project.build.directory}/generated-sources</output>
 							<library>spring-cloud</library>
-							<apiPackage>${project.groupId}.api</apiPackage>
+							<output>${project.build.directory}/generated-sources</output>
+							<apiPackage>${project.groupId}.client</apiPackage>
 							<modelPackage>${project.groupId}.model</modelPackage>
+							<invokerPackage>${project.groupId}.client</invokerPackage>
 							<skipValidateSpec>true</skipValidateSpec>
 							<configOptions>
-								<interfaceOnly>true</interfaceOnly>
-								<sourceFolder>src/gen/java/main</sourceFolder>
 								<hideGenerationTimestamp>true</hideGenerationTimestamp>
-								<java8>false</java8>
+								<useBeanValidation>true</useBeanValidation>
 								<dateLibrary>java8</dateLibrary>
+								<java8>true</java8>
+								<dateLibrary>java8</dateLibrary>
+								<sourceFolder>src/gen/java/main</sourceFolder>
+								<interfaceOnly>true</interfaceOnly>
 							</configOptions>
 						</configuration>
 					</execution>

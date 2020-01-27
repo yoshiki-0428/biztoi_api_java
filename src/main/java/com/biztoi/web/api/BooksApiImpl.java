@@ -3,8 +3,11 @@ package com.biztoi.web.api;
 import com.biztoi.api.BooksApi;
 import com.biztoi.api.VolumesApi;
 import com.biztoi.model.*;
-import feign.Response;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.experimental.FieldDefaults;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,17 +19,23 @@ import reactor.core.publisher.Mono;
 import javax.validation.Valid;
 import java.util.Arrays;
 
-@RestController
-@RequestMapping("${openapi.bizToi.base-path:/api}")
 @CrossOrigin
+@RestController
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequestMapping("${openapi.bizToi.base-path:/api}")
 public class BooksApiImpl implements BooksApi {
+    @NonNull
+    VolumesApi volumesApi;
+
     @Override
     public ResponseEntity<Flux<com.biztoi.model.Book>> books(ServerWebExchange exchange) {
-//        Volumes v = volumesApi.booksVolumesList("aaa", null, null, null,
-//                null, null, null, null,
-//                null, null, null, null,
-//                null, null, null, null,
-//                null, null, null, null).getBody();
+        Volumes v = volumesApi.booksVolumesList("aaa", null, null, null,
+                null, null, null, null,
+                null, null, null, null,
+                null, null, null, null,
+                null, null, null, null).getBody();
+
         return ResponseEntity.ok(Flux.fromIterable(Arrays.asList(new Book().id("a").detail("detail").title("title").favorite(true).pictureUrl("http://www.henobu.com/wp-content/uploads/2016/05/test.jpg"))));
     }
 
@@ -95,3 +104,5 @@ public class BooksApiImpl implements BooksApi {
         return null;
     }
 }
+
+
