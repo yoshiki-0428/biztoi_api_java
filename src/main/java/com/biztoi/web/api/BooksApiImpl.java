@@ -1,12 +1,14 @@
 package com.biztoi.web.api;
 
 import com.biztoi.api.BooksApi;
-import com.biztoi.api.VolumesApi;
+import com.biztoi.web.client.VolumesApiClient;
 import com.biztoi.model.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,7 +18,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
-import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @CrossOrigin
 @RestController
@@ -25,17 +28,35 @@ import java.util.Arrays;
 @RequestMapping("${openapi.bizToi.base-path:/api}")
 public class BooksApiImpl implements BooksApi {
     @NonNull
-    VolumesApi volumesApi;
+    VolumesApiClient volumesApiClient;
+
+    private static final Logger log = LoggerFactory.getLogger(BooksApiImpl.class);
 
     @Override
     public ResponseEntity<Flux<com.biztoi.model.Book>> books(ServerWebExchange exchange) {
-        Volumes v = volumesApi.booksVolumesList("aaa", null, null, null,
-                null, null, null, null,
-                null, null, null, null,
-                null, null, null, null,
-                null, null, null, null).getBody();
+        Volumes v = volumesApiClient.booksVolumesList("daigo", null, null, null,
+            null, null, null, null,
+            null, null, null, null,
+            null, null, null, null,
+            null, null, null, null).getBody();
+        log.info(v.toString());
 
-        return ResponseEntity.ok(Flux.fromIterable(Arrays.asList(new Book().id("a").detail("detail").title("title").favorite(true).pictureUrl("http://www.henobu.com/wp-content/uploads/2016/05/test.jpg"))));
+        List<Book> books = v.getItems().stream()
+                .filter(item -> item.getVolumeInfo().getImageLinks() != null)
+                .map(item -> {
+            return new Book()
+                   .id(item.getId())
+                   .title(item.getVolumeInfo().getTitle())
+                   .detail(item.getVolumeInfo().getDescription())
+                   .pictureUrl(item.getVolumeInfo().getImageLinks().getSmallThumbnail())
+                   .linkUrl(item.getSelfLink())
+                   .isbn(item.getVolumeInfo().getIndustryIdentifiers().get(0).getIdentifier())
+                   .author(item.getVolumeInfo().getAuthors())
+                   .category(item.getVolumeInfo().getCategories())
+                   .favorite(false);
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(Flux.fromIterable(books));
     }
 
     @Override
