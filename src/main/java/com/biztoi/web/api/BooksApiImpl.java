@@ -3,16 +3,17 @@ package com.biztoi.web.api;
 import com.biztoi.api.BooksApi;
 import com.biztoi.web.client.VolumesApiClient;
 import com.biztoi.model.*;
+import feign.FeignException;
+import io.swagger.v3.oas.models.servers.Server;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @CrossOrigin
 @RestController
+@RestControllerAdvice
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("${openapi.bizToi.base-path:/api}")
@@ -33,7 +35,7 @@ public class BooksApiImpl implements BooksApi {
     private static final Logger log = LoggerFactory.getLogger(BooksApiImpl.class);
 
     @Override
-    public ResponseEntity<Flux<com.biztoi.model.Book>> books(ServerWebExchange exchange) {
+    public ResponseEntity<Flux<Book>> books(ServerWebExchange exchange) {
         Volumes v = volumesApiClient.booksVolumesList("daigo", null, null, null,
             null, null, null, null,
             null, null, null, null,
@@ -86,7 +88,20 @@ public class BooksApiImpl implements BooksApi {
 
     @Override
     public ResponseEntity<Book> getBookId(String bookId, ServerWebExchange exchange) {
-        return null;
+        Volume item = volumesApiClient.booksVolumesGet(bookId, null).getBody();
+        log.info(item.toString());
+        Book b = new Book()
+                .id(item.getId())
+                .title(item.getVolumeInfo().getTitle())
+                .detail(item.getVolumeInfo().getDescription())
+                .pictureUrl(item.getVolumeInfo().getImageLinks().getSmallThumbnail())
+                .linkUrl(item.getSelfLink())
+                .isbn(item.getVolumeInfo().getIndustryIdentifiers().get(0).getIdentifier())
+                .author(item.getVolumeInfo().getAuthors())
+                .category(item.getVolumeInfo().getCategories())
+                .favorite(false);
+
+        return ResponseEntity.ok(b);
     }
 
     @Override
@@ -122,6 +137,12 @@ public class BooksApiImpl implements BooksApi {
     @Override
     public ResponseEntity<Toi> postToi(String bookId, @Valid Mono<Toi> toi, ServerWebExchange exchange) {
         return null;
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler({ FeignException.class })
+    public void feignExceptionHandler(FeignException fe) {
+        log.error(fe.getMessage());
     }
 }
 
