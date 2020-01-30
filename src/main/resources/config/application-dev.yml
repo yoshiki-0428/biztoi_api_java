@@ -1,2 +1,5 @@
 server:
   port: 8000
+
+rakuten:
+  appId: "1035252894012359396"

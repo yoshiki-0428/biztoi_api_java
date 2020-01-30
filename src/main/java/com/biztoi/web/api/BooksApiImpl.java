@@ -1,10 +1,9 @@
 package com.biztoi.web.api;
 
 import com.biztoi.api.BooksApi;
-import com.biztoi.web.client.VolumesApiClient;
+import com.biztoi.web.client.RakutenBooksApiClient;
 import com.biztoi.model.*;
 import feign.FeignException;
-import io.swagger.v3.oas.models.servers.Server;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -19,6 +18,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,34 +30,33 @@ import java.util.stream.Collectors;
 @RequestMapping("${openapi.bizToi.base-path:/api}")
 public class BooksApiImpl implements BooksApi {
     @NonNull
-    VolumesApiClient volumesApiClient;
+    RakutenBooksApiClient booksApiClient;
 
     private static final Logger log = LoggerFactory.getLogger(BooksApiImpl.class);
 
     @Override
     public ResponseEntity<Flux<Book>> books(ServerWebExchange exchange) {
-        Volumes v = volumesApiClient.booksVolumesList("daigo", null, null, null,
-            null, null, null, null,
-            null, null, null, null,
-            null, null, null, null,
-            null, null, null, null).getBody();
-        log.info(v.toString());
+        SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
+                "1035252894012359396", "001006", null, null, null, null,
+                null, "sales", null, null, null).getBody();
+        if (searchInfo == null || searchInfo.getItems() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        log.info(searchInfo.getItems().get(0).getItem().toString());
 
-        List<Book> books = v.getItems().stream()
-                .filter(item -> item.getVolumeInfo().getImageLinks() != null)
-                .map(item -> {
-            return new Book()
-                   .id(item.getId())
-                   .title(item.getVolumeInfo().getTitle())
-                   .detail(item.getVolumeInfo().getDescription())
-                   .pictureUrl(item.getVolumeInfo().getImageLinks().getSmallThumbnail())
-                   .linkUrl(item.getSelfLink())
-                   .isbn(item.getVolumeInfo().getIndustryIdentifiers().get(0).getIdentifier())
-                   .author(item.getVolumeInfo().getAuthors())
-                   .category(item.getVolumeInfo().getCategories())
-                   .favorite(false);
-        }).collect(Collectors.toList());
-
+        List<Book> books = searchInfo.getItems().stream()
+                .map(ItemMap::getItem)
+                .map(item -> new Book()
+                            .id(item.getIsbn())
+                            .title(item.getTitle())
+                            .detail(item.getItemCaption())
+                            .pictureUrl(item.getMediumImageUrl())
+                            .linkUrl(item.getItemUrl())
+                            .isbn(item.getIsbn())
+                            .author(item.getAuthor() != null ? Arrays.asList(item.getAuthor().split("/")) : null)
+                            .category(item.getBooksGenreId() != null ? Arrays.asList(item.getBooksGenreId().split("/")) : null)
+                            .favorite(false))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(Flux.fromIterable(books));
     }
 
@@ -88,20 +87,27 @@ public class BooksApiImpl implements BooksApi {
 
     @Override
     public ResponseEntity<Book> getBookId(String bookId, ServerWebExchange exchange) {
-        Volume item = volumesApiClient.booksVolumesGet(bookId, null).getBody();
-        log.info(item.toString());
-        Book b = new Book()
-                .id(item.getId())
-                .title(item.getVolumeInfo().getTitle())
-                .detail(item.getVolumeInfo().getDescription())
-                .pictureUrl(item.getVolumeInfo().getImageLinks().getSmallThumbnail())
-                .linkUrl(item.getSelfLink())
-                .isbn(item.getVolumeInfo().getIndustryIdentifiers().get(0).getIdentifier())
-                .author(item.getVolumeInfo().getAuthors())
-                .category(item.getVolumeInfo().getCategories())
+        // TODO Service化
+        SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
+                "1035252894012359396", "001", null, null, null, bookId,
+                null, null, null, null, null).getBody();
+        if (searchInfo == null || searchInfo.getItems() == null || searchInfo.getItems().size() == 0) {
+            return ResponseEntity.notFound().build();
+        }
+        log.info(searchInfo.getItems().toString());
+        Item item = searchInfo.getItems().get(0).getItem();
+        Book book = new Book()
+                .id(item.getIsbn())
+                .title(item.getTitle())
+                .detail(item.getItemCaption())
+                .pictureUrl(item.getMediumImageUrl())
+                .linkUrl(item.getItemUrl())
+                .isbn(item.getIsbn())
+                .author(item.getAuthor() != null ? Arrays.asList(item.getAuthor().split("/")) : null)
+                .category(item.getBooksGenreId() != null ? Arrays.asList(item.getBooksGenreId().split("/")) : null)
                 .favorite(false);
 
-        return ResponseEntity.ok(b);
+        return ResponseEntity.ok(book);
     }
 
     @Override

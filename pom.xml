@@ -174,6 +174,33 @@
 							</configOptions>
 						</configuration>
 					</execution>
+					<execution>
+						<id>rakuten-books</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<inputSpec>src/main/openapi/reference/rakuten/books.yaml</inputSpec>
+							<generatorName>spring</generatorName>
+							<library>spring-cloud</library>
+							<output>${project.build.directory}/generated-sources</output>
+							<apiPackage>${project.groupId}.api</apiPackage>
+							<modelPackage>${project.groupId}.model</modelPackage>
+							<invokerPackage>${project.groupId}.api</invokerPackage>
+							<skipValidateSpec>true</skipValidateSpec>
+							<configOptions>
+								<serializableModel>false</serializableModel>
+								<hideGenerationTimestamp>true</hideGenerationTimestamp>
+								<useBeanValidation>true</useBeanValidation>
+								<dateLibrary>java8</dateLibrary>
+								<java8>true</java8>
+								<dateLibrary>java8</dateLibrary>
+								<sourceFolder>src/gen/java/main</sourceFolder>
+								<interfaceOnly>true</interfaceOnly>
+							</configOptions>
+						</configuration>
+					</execution>
+
 				</executions>
 			</plugin>
 		</plugins>
