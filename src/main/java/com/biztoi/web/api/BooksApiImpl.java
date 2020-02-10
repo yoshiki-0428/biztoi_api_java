@@ -1,8 +1,9 @@
 package com.biztoi.web.api;
 
 import com.biztoi.api.BooksApi;
-import com.biztoi.web.client.RakutenBooksApiClient;
 import com.biztoi.model.*;
+import com.biztoi.web.service.RakutenApiService;
+import com.biztoi.web.utils.BooksUtils;
 import feign.FeignException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -30,32 +31,19 @@ import java.util.stream.Collectors;
 @RequestMapping("${openapi.bizToi.base-path:/api}")
 public class BooksApiImpl implements BooksApi {
     @NonNull
-    RakutenBooksApiClient booksApiClient;
+    RakutenApiService rakutenApiService;
 
     private static final Logger log = LoggerFactory.getLogger(BooksApiImpl.class);
 
     @Override
     public ResponseEntity<Flux<Book>> books(ServerWebExchange exchange) {
-        SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                "1035252894012359396", "001006", null, null, null, null,
-                null, "sales", null, null, null).getBody();
-        if (searchInfo == null || searchInfo.getItems() == null) {
+        List<Item> items = this.rakutenApiService.getSalesBooks();
+        if (items == null) {
             return ResponseEntity.notFound().build();
         }
-        log.info(searchInfo.getItems().get(0).getItem().toString());
 
-        List<Book> books = searchInfo.getItems().stream()
-                .map(ItemMap::getItem)
-                .map(item -> new Book()
-                            .id(item.getIsbn())
-                            .title(item.getTitle())
-                            .detail(item.getItemCaption())
-                            .pictureUrl(item.getMediumImageUrl())
-                            .linkUrl(item.getItemUrl())
-                            .isbn(item.getIsbn())
-                            .author(item.getAuthor() != null ? Arrays.asList(item.getAuthor().split("/")) : null)
-                            .category(item.getBooksGenreId() != null ? Arrays.asList(item.getBooksGenreId().split("/")) : null)
-                            .favorite(false))
+        List<Book> books = items.stream()
+                .map(BooksUtils::to)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(Flux.fromIterable(books));
     }
@@ -87,27 +75,11 @@ public class BooksApiImpl implements BooksApi {
 
     @Override
     public ResponseEntity<Book> getBookId(String bookId, ServerWebExchange exchange) {
-        // TODO Service化
-        SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                "1035252894012359396", "001", null, null, null, bookId,
-                null, null, null, null, null).getBody();
-        if (searchInfo == null || searchInfo.getItems() == null || searchInfo.getItems().size() == 0) {
+        Item item = this.rakutenApiService.findBook(bookId);
+        if (item == null) {
             return ResponseEntity.notFound().build();
         }
-        log.info(searchInfo.getItems().toString());
-        Item item = searchInfo.getItems().get(0).getItem();
-        Book book = new Book()
-                .id(item.getIsbn())
-                .title(item.getTitle())
-                .detail(item.getItemCaption())
-                .pictureUrl(item.getMediumImageUrl())
-                .linkUrl(item.getItemUrl())
-                .isbn(item.getIsbn())
-                .author(item.getAuthor() != null ? Arrays.asList(item.getAuthor().split("/")) : null)
-                .category(item.getBooksGenreId() != null ? Arrays.asList(item.getBooksGenreId().split("/")) : null)
-                .favorite(false);
-
-        return ResponseEntity.ok(book);
+        return ResponseEntity.ok(BooksUtils.to(item));
     }
 
     @Override
