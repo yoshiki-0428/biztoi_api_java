@@ -3,6 +3,7 @@ package com.biztoi;
 import com.biztoi.web.config.DefaultProfileUtil;
 import com.github.jknack.handlebars.internal.lang3.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -26,6 +27,9 @@ public class BiztoiApiJavaApplication {
 	}
 
 	public static void main(String[] args) {
+		Flyway flyway = Flyway.configure().dataSource("jdbc:postgresql://localhost:5432/biztoi"
+				, "biztoi", "biztoi").load();
+		flyway.migrate();
 		SpringApplication app = new SpringApplication(BiztoiApiJavaApplication.class);
 		DefaultProfileUtil.addDefaultProfile(app);
 		Environment env = app.run(args).getEnvironment();

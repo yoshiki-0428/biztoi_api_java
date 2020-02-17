@@ -1,0 +1,21 @@
+version: '3'
+services:
+  api:
+    image: registry.gitlab.com/rrrtcdish2/biztoi_api_java/master:latest
+    environment:
+      SPRING_ENVIRONMENT: 'dev'
+      SPRING_DATASOURCE_URL: 'jdbc:postgressql://db:5432/biztoi'
+      SPRING_DATASOURCE_USERNAME: 'biztoi'
+      SPRING_DATASOURCE_PASSWORD: 'biztoi'
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+  db:
+    image: postgres:11-alpine
+    environment:
+      POSTGRES_DB: 'biztoi'
+      POSTGRES_USER: 'biztoi'
+      POSTGRES_PASSWORD: 'biztoi'
+    ports:
+      - 5432:5432
