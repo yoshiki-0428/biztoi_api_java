@@ -2,7 +2,7 @@ spring:
   main:
     allow-bean-definition-overriding: true
   jooq:
-    sql-dialect: postgresql
+    sql-dialect: postgres
 
   datasource:
     url: jdbc:postgresql://localhost:5432/biztoi

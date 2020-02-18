@@ -22,7 +22,7 @@ create table mst_toi
 
 create table mst_question
 (
-    id uuid not null default uuid_in(md5(random()::text || clock_timestamp()::text)::cstring),
+    id uuid not null,
     pattern_id int not null,
     order_id int not null,
     title varchar(255) not null,
@@ -37,7 +37,7 @@ create table mst_question
 
 create table answer
 (
-    id uuid not null default uuid_in(md5(random()::text || clock_timestamp()::text)::cstring),
+    id uuid not null,
     orderId int not null,
     answer_head_id uuid not null,
 	question_id uuid not null,
@@ -49,7 +49,7 @@ create table answer
 
 create table answer_head
 (
-    id uuid not null default uuid_in(md5(random()::text || clock_timestamp()::text)::cstring),
+    id uuid not null,
     user_id uuid not null,
     publish_flg varchar(1) not null default '1',
     inserted timestamp default current_timestamp not null,
@@ -58,7 +58,7 @@ create table answer_head
 
 create table likes
 (
-    id uuid not null default uuid_in(md5(random()::text || clock_timestamp()::text)::cstring),
+    id uuid not null,
     type varchar(5) not null,
     foreign_id uuid not null,
     inserted timestamp default current_timestamp not null
