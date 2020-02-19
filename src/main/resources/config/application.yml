@@ -5,9 +5,9 @@ spring:
     sql-dialect: postgres
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/biztoi
-    username: biztoi
-    password: biztoi
+    url: jdbc:postgresql://ec2-3-213-192-58.compute-1.amazonaws.com:5432/dakc80irsitdn7
+    username: nuvkalnteozjei
+    password: 310e9b44e58545ebc10e907eac269615276e0b239a4ff4b40e3410eafb3a70d8
     driverClassName: org.postgresql.Driver
 
 rakuten:
