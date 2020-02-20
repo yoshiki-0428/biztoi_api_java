@@ -1,0 +1,1 @@
+FROM registry.gitlab.com/rrrtcdish2/biztoi_api_java/feature/openapi:latest

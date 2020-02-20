@@ -28,7 +28,7 @@ create table mst_question
     pattern_id integer not null,
     order_id integer not null,
     title varchar(255) not null,
-    detail varchar(255) not null,
+    detail varchar(255),
     example varchar(255) not null,
     step varchar(1) not null,
     answer_type varchar(1) not null,
