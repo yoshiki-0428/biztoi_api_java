@@ -47,7 +47,7 @@ public class DataQueryService {
 
     public Question findQuestion(String questionId) {
         MstQuestionRecord record = this.dsl.selectFrom(MST_QUESTION).where(MST_QUESTION.PATTERN_ID.eq(0)
-                .and(MST_QUESTION.ID.eq(UUID.fromString(questionId)))).fetchOne();
+                .and(MST_QUESTION.ID.cast(String.class).eq(questionId))).fetchOne();
         return new Question().title(record.getTitle()).detail(record.getDetail()).id(record.getId().toString())
                 .orderId(record.getOrderId()).patternId(record.getPatternId())
                 .example(record.getExample()).required(record.getRequired().equals("1"))
