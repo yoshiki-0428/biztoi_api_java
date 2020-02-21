@@ -9,6 +9,8 @@ spring:
     username: nuvkalnteozjei
     password: 310e9b44e58545ebc10e907eac269615276e0b239a4ff4b40e3410eafb3a70d8
     driverClassName: org.postgresql.Driver
+  profiles:
+    active:
 
 rakuten:
   appId: "1035252894012359396"
