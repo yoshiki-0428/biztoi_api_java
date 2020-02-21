@@ -2,6 +2,7 @@ package com.biztoi.web.api;
 
 import com.biztoi.api.ApiApi;
 import com.biztoi.model.*;
+import com.biztoi.web.service.DataQueryService;
 import com.biztoi.web.service.RakutenApiService;
 import com.biztoi.web.utils.BooksUtils;
 import feign.FeignException;
@@ -34,6 +35,8 @@ import java.util.stream.IntStream;
 public class BizToiApiImpl implements ApiApi {
     @NonNull
     RakutenApiService rakutenApiService;
+
+    @NonNull DataQueryService queryService;
 
     private static final Logger log = LoggerFactory.getLogger(BizToiApiImpl.class);
 
@@ -143,8 +146,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<Toi> getBookToi(String bookId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        log.info("bookId {}", bookId);
-        return ResponseEntity.ok(new Toi().title("a").detail("aa").publishFlg(true));
+        return ResponseEntity.ok(this.queryService.findToi());
     }
 
     @Override
