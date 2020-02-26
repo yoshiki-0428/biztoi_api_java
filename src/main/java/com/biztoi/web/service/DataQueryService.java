@@ -1,7 +1,6 @@
 package com.biztoi.web.service;
 
-import com.biztoi.model.Question;
-import com.biztoi.model.Toi;
+import com.biztoi.model.*;
 import com.biztoi.tables.records.MstQuestionRecord;
 import com.biztoi.tables.records.MstToiRecord;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,8 +11,12 @@ import lombok.experimental.FieldDefaults;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.biztoi.Tables.*;
 
@@ -65,4 +68,35 @@ public class DataQueryService {
                 .execute();
     }
 
+//    public List<SendLikeInfo> selectAllLikesBook(String userId) {
+//        final List<SendLikeInfo> list = new ArrayList<>();
+//        this.dsl.selectFrom(LIKES).where(LIKES.TYPE.eq("book").and(LIKES.USER_ID.eq(userId)))
+//                .fetch().forEach(likesRecord -> list.add(new SendLikeInfo().id(likesRecord.getForeignId()).active(true)));
+//        return list;
+//    }
+//
+    public Map<String, AnswerLikes> selectAllLikesAnswer() {
+        // TODO answer毎のいいね数を集計する
+        final Map<String, AnswerLikes> answerLikesMap = new HashMap<>();
+        this.dsl.selectFrom(LIKES).where(LIKES.TYPE.eq("answer")).fetch()
+                .forEach(record -> answerLikesMap.put(
+                        record.getForeignId(),
+                        new AnswerLikes().active(true).sum(BigDecimal.valueOf(10))));
+        return answerLikesMap;
+    }
+
+    public List<AnswerHead> getAnswers(String bookId, int limit) {
+        final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer();
+        final List<AnswerHead> list = new ArrayList<>();
+        this.dsl.selectFrom(ANSWER_HEAD)
+                .where(ANSWER_HEAD.BOOK_ID.eq(bookId))
+                .limit(limit).fetch().forEach(record -> {
+                    list.add(new com.biztoi.model.AnswerHead().bookId(bookId)
+                            .id(record.getId()).userId(record.getUserId()).publishFlg(record.getPublishFlg().equals("1"))
+                            .inserted(record.getInserted().toString()).modified(record.getModified().toString())
+                            .likeInfo(answerLikesMap.getOrDefault(record.getId(), null))
+                    );
+        });
+        return list;
+    }
 }

@@ -114,11 +114,11 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public ResponseEntity<Flux<AnswerHead>> getAnswers(String bookId, ServerWebExchange exchange) {
-
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(Flux.fromIterable(IntStream.range(0, 5).mapToObj(i -> {
-            return this.getStubAnswerHead(UUID.randomUUID().toString(), bookId);
-        }).collect(Collectors.toList())));
+        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswers(bookId, 50)));
+//        return ResponseEntity.ok(Flux.fromIterable(IntStream.range(0, 5).mapToObj(i -> {
+//            return this.getStubAnswerHead(UUID.randomUUID().toString(), bookId);
+//        }).collect(Collectors.toList())));
     }
 
     @Override
