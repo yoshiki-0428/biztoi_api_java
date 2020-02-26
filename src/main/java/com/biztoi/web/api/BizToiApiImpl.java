@@ -72,19 +72,22 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<Void> deleteFavoriteBooks(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return null;
+        sendLikeInfo.subscribe(likeInfo -> this.queryService.deleteLike(likeInfo.getId(), "book", "a8554f4c-569c-414c-bddd-c47707e241e3"));
+        return ResponseEntity.ok().build();
     }
 
     @Override
     public ResponseEntity<Void> deleteLikesAnswers(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return null;
+        sendLikeInfo.subscribe(likeInfo -> this.queryService.deleteLike(likeInfo.getId(), "answer", "a8554f4c-569c-414c-bddd-c47707e241e3"));
+        return ResponseEntity.ok().build();
     }
 
     @Override
     public ResponseEntity<Void> favoriteBooks(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return null;
+        sendLikeInfo.subscribe(likeInfo -> this.queryService.createLike(likeInfo.getId(), "book", "a8554f4c-569c-414c-bddd-c47707e241e3"));
+        return ResponseEntity.ok().build();
     }
 
     @Override
@@ -150,8 +153,8 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<Void> likesAnswers(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        log.info("sendLikeInfo {}", sendLikeInfo.toString());
-        return null;
+        sendLikeInfo.subscribe(likeInfo -> this.queryService.createLike(likeInfo.getId(), "answer", "a8554f4c-569c-414c-bddd-c47707e241e3"));
+        return ResponseEntity.ok().build();
     }
 
     @Override
