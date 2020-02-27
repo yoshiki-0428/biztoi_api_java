@@ -40,6 +40,8 @@ public class BizToiApiImpl implements ApiApi {
 
     private static final Logger log = LoggerFactory.getLogger(BizToiApiImpl.class);
 
+    private static String userId = "a8554f4c-569c-414c-bddd-c47707e241e1";
+
     @Override
     public ResponseEntity<Authorize> authGetToken(@NotNull @Valid String code, ServerWebExchange exchange) {
         return null;
@@ -57,8 +59,10 @@ public class BizToiApiImpl implements ApiApi {
             return ResponseEntity.notFound().build();
         }
 
+        List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
         List<Book> books = items.stream()
                 .map(BooksUtils::to)
+                .map(b -> b.favorite(bookFavList.contains(b.getIsbn())))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(Flux.fromIterable(books));
     }
@@ -72,21 +76,21 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<Void> favoriteBooks(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        sendLikeInfo.subscribe(likeInfo -> this.queryService.createLike(likeInfo.getId(), "book", "a8554f4c-569c-414c-bddd-c47707e241e3"));
+        sendLikeInfo.subscribe(likeInfo -> this.queryService.createLike(likeInfo.getId(), "book", userId));
         return ResponseEntity.ok().build();
     }
 
     @Override
     public ResponseEntity<Void> deleteFavoriteBooks(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        sendLikeInfo.subscribe(likeInfo -> this.queryService.deleteLike(likeInfo.getId(), "book", "a8554f4c-569c-414c-bddd-c47707e241e3"));
+        sendLikeInfo.subscribe(likeInfo -> this.queryService.deleteLike(likeInfo.getId(), "book", userId));
         return ResponseEntity.ok().build();
     }
 
     @Override
     public ResponseEntity<Void> likesAnswers(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        sendLikeInfo.subscribe(likeInfo -> this.queryService.createLike(likeInfo.getId(), "answer", "a8554f4c-569c-414c-bddd-c47707e241e3"));
+        sendLikeInfo.subscribe(likeInfo -> this.queryService.createLike(likeInfo.getId(), "answer", userId));
         return ResponseEntity.ok().build();
     }
 
@@ -115,10 +119,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<Flux<AnswerHead>> getAnswers(String bookId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswers(bookId, 50)));
-//        return ResponseEntity.ok(Flux.fromIterable(IntStream.range(0, 5).mapToObj(i -> {
-//            return this.getStubAnswerHead(UUID.randomUUID().toString(), bookId);
-//        }).collect(Collectors.toList())));
+        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswers(userId, bookId, 50)));
     }
 
     @Override
@@ -134,7 +135,10 @@ public class BizToiApiImpl implements ApiApi {
         if (item == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(BooksUtils.to(item));
+
+        List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
+        return ResponseEntity.ok(BooksUtils.to(item)
+                .favorite(bookFavList.contains(bookId)));
     }
 
     @Override
@@ -229,7 +233,7 @@ public class BizToiApiImpl implements ApiApi {
                 )
                 .likeInfo(new AnswerLikes()
                         .active(random.nextBoolean())
-                        .sum(new BigDecimal(random.nextInt(100)))
+                        .sum(random.nextInt(100))
                 )
                 .inserted(date.toString())
                 .modified(date.plusDays(5).toString());

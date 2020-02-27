@@ -9,14 +9,12 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.biztoi.Tables.*;
 
@@ -33,16 +31,12 @@ public class DataQueryService {
     }
 
     public List<Question> findQuestionsAll() {
-        List<Question> list = new ArrayList<>();
-        this.dsl.selectFrom(MST_QUESTION).where(MST_QUESTION.PATTERN_ID.eq(0)).orderBy(MST_QUESTION.ORDER_ID)
-                .fetch().forEach(record -> {
-                    list.add(
-                            new Question().title(record.getTitle()).detail(record.getDetail()).id(record.getId())
-                                    .orderId(record.getOrderId()).patternId(record.getPatternId())
-                                    .example(record.getExample()).required(record.getRequired().equals("1"))
-                                    .step(record.getStep()));
-                    });
-        return list;
+        return this.dsl.selectFrom(MST_QUESTION).where(MST_QUESTION.PATTERN_ID.eq(0)).orderBy(MST_QUESTION.ORDER_ID)
+                .fetch().stream().map(record -> new Question()
+                        .title(record.getTitle()).detail(record.getDetail()).id(record.getId())
+                        .orderId(record.getOrderId()).patternId(record.getPatternId()).example(record.getExample())
+                        .required(record.getRequired().equals("1")).step(record.getStep()))
+                .collect(Collectors.toList());
     }
 
     public Question findQuestion(String questionId) {
@@ -54,12 +48,17 @@ public class DataQueryService {
                 .step(record.getStep());
     }
 
+    public List<String> isFavoriteBooks(String userId) {
+        return this.dsl.select(LIKES.FOREIGN_ID).from(LIKES)
+                .where(LIKES.USER_ID.eq(userId).and(LIKES.TYPE.eq("book"))).fetch().stream()
+                .map(r -> r.get(LIKES.FOREIGN_ID)).collect(Collectors.toList());
+    }
+
     public int createLike(String id, String type, String userId) {
         return this.dsl
                 .insertInto(LIKES, LIKES.FOREIGN_ID, LIKES.TYPE, LIKES.USER_ID)
                 .values(id, type, userId).execute();
     }
-
     public int deleteLike(String id, String type, String userId) {
         return this.dsl.deleteFrom(LIKES)
                 .where(LIKES.FOREIGN_ID.eq(id)
@@ -75,28 +74,44 @@ public class DataQueryService {
 //        return list;
 //    }
 //
-    public Map<String, AnswerLikes> selectAllLikesAnswer() {
-        // TODO answer毎のいいね数を集計する
-        final Map<String, AnswerLikes> answerLikesMap = new HashMap<>();
-        this.dsl.selectFrom(LIKES).where(LIKES.TYPE.eq("answer")).fetch()
-                .forEach(record -> answerLikesMap.put(
-                        record.getForeignId(),
-                        new AnswerLikes().active(true).sum(BigDecimal.valueOf(10))));
-        return answerLikesMap;
+
+    public Map<String, AnswerLikes> selectAllLikesAnswer(String userId) {
+        List<String> userLikeList = this.dsl.select(LIKES.FOREIGN_ID).from(LIKES)
+                .where(LIKES.USER_ID.eq(userId).and(LIKES.TYPE.eq("answer"))).fetch().stream()
+                .map(r -> r.get(LIKES.FOREIGN_ID)).collect(Collectors.toList());
+
+        return this.dsl.select(LIKES.FOREIGN_ID, DSL.count()).from(LIKES)
+                .where(LIKES.TYPE.eq("answer"))
+                .groupBy(LIKES.FOREIGN_ID).orderBy(DSL.count().desc())
+                .fetch().stream().collect(Collectors.toMap(
+                        r -> r.get(LIKES.FOREIGN_ID),
+                        r -> new AnswerLikes()
+                                .active(userLikeList.contains(r.get(LIKES.FOREIGN_ID)))
+                                .sum(r.get(DSL.count()))
+                                .id(r.get(LIKES.FOREIGN_ID))));
     }
 
-    public List<AnswerHead> getAnswers(String bookId, int limit) {
-        final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer();
-        final List<AnswerHead> list = new ArrayList<>();
-        this.dsl.selectFrom(ANSWER_HEAD)
+    public Map<String, BizToiUser> selectAllBizToiUserMock() {
+        final Map<String, BizToiUser> bizToiUserMap = new HashMap<>();
+        IntStream.range(0, 10).forEach(i -> bizToiUserMap.put(String.valueOf(i), new BizToiUser()
+                .id(UUID.randomUUID().toString())
+                .nickname("User NickName" + new Random().nextInt(11)).country("ja").pictureUrl("https://picsum.photos/20" + new Random().nextInt(9))
+        ));
+        return bizToiUserMap;
+    }
+
+    public List<AnswerHead> getAnswers(String userId, String bookId, int limit) {
+        final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer(userId);
+        final Map<String, BizToiUser> bizToiUserMap = this.selectAllBizToiUserMock();
+
+        // TODO userInfo, answer table join delete random
+        return this.dsl.selectFrom(ANSWER_HEAD)
                 .where(ANSWER_HEAD.BOOK_ID.eq(bookId))
-                .limit(limit).fetch().forEach(record -> {
-                    list.add(new com.biztoi.model.AnswerHead().bookId(bookId)
+                .limit(limit).fetch().stream().map(record -> new com.biztoi.model.AnswerHead().bookId(bookId)
                             .id(record.getId()).userId(record.getUserId()).publishFlg(record.getPublishFlg().equals("1"))
                             .inserted(record.getInserted().toString()).modified(record.getModified().toString())
                             .likeInfo(answerLikesMap.getOrDefault(record.getId(), null))
-                    );
-        });
-        return list;
+                            .userInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null))
+                    ).collect(Collectors.toList());
     }
 }
