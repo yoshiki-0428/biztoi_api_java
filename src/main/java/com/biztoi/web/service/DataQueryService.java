@@ -110,8 +110,9 @@ public class DataQueryService {
                 .limit(limit).fetch().stream().map(record -> new com.biztoi.model.AnswerHead().bookId(bookId)
                             .id(record.getId()).userId(record.getUserId()).publishFlg(record.getPublishFlg().equals("1"))
                             .inserted(record.getInserted().toString()).modified(record.getModified().toString())
-                            .likeInfo(answerLikesMap.getOrDefault(record.getId(), null))
-                            .userInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null))
-                    ).collect(Collectors.toList());
+                            .likeInfo(answerLikesMap.getOrDefault(record.getId(), new AnswerLikes().active(false).sum(0)))
+                            .userInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null)))
+                .sorted(Comparator.comparing(o -> o.getLikeInfo().getSum(), Comparator.reverseOrder()))
+                .collect(Collectors.toList());
     }
 }

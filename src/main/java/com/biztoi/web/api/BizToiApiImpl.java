@@ -97,7 +97,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<Void> deleteLikesAnswers(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        sendLikeInfo.subscribe(likeInfo -> this.queryService.deleteLike(likeInfo.getId(), "answer", "a8554f4c-569c-414c-bddd-c47707e241e3"));
+        sendLikeInfo.subscribe(likeInfo -> this.queryService.deleteLike(likeInfo.getId(), "answer", userId));
         return ResponseEntity.ok().build();
     }
 
