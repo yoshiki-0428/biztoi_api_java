@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -27,12 +28,13 @@ public class BiztoiApiJavaApplication {
 	}
 
 	public static void main(String[] args) {
-		Flyway flyway = Flyway.configure().dataSource("jdbc:postgresql://ec2-3-213-192-58.compute-1.amazonaws.com:5432/dakc80irsitdn7"
-				, "nuvkalnteozjei", "310e9b44e58545ebc10e907eac269615276e0b239a4ff4b40e3410eafb3a70d8").load();
-		flyway.migrate();
 		SpringApplication app = new SpringApplication(BiztoiApiJavaApplication.class);
 		DefaultProfileUtil.addDefaultProfile(app);
 		Environment env = app.run(args).getEnvironment();
+
+		Flyway flyway = Flyway.configure().dataSource(env.getProperty("spring.datasource.url"),
+				env.getProperty("spring.datasource.username"), env.getProperty("spring.datasource.password")).load();
+		flyway.migrate();
 		logApplicationStartup(env);
 	}
 
