@@ -125,7 +125,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<AnswerHead> getAnswersMe(String bookId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(this.getStubAnswerHead(UUID.randomUUID().toString(), bookId));
+        return ResponseEntity.ok(this.queryService.getAnswerHeadMe(bookId, userId));
     }
 
     @Override

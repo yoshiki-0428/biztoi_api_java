@@ -141,4 +141,15 @@ public class DataQueryService {
                 .sorted(Comparator.comparing(o -> o.getLikeInfo().getSum(), Comparator.reverseOrder()))
                 .collect(Collectors.toList());
     }
+
+    public AnswerHead getAnswerHeadMe(String bookId, String userId) {
+        List<Answer> answers = this.dsl.select().from(ANSWER_HEAD).join(ANSWER).on(ANSWER_HEAD.ID.eq(ANSWER.ANSWER_HEAD_ID))
+                .where(ANSWER_HEAD.USER_ID.eq(userId).and(ANSWER_HEAD.BOOK_ID.eq(bookId)))
+                .fetch().stream().map(record -> {
+                    return new Answer().id(record.get(ANSWER.ID)).answer(record.get(ANSWER.ANSWER_))
+                    .answerHeadId(record.get(ANSWER.ANSWER_HEAD_ID)).inserted(record.get(ANSWER.INSERTED).toString()).modified(record.get(ANSWER.MODIFIED).toString())
+                    .orderId(record.get(ANSWER.ORDER_ID));
+                }).collect(Collectors.toList());
+        return new AnswerHead().userId(userId).bookId(bookId).answers(answers);
+    }
 }
