@@ -162,9 +162,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<Flux<Answer>> postAnswer(String bookId, String questionId, @Valid Mono<AnswerList> answerList, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        log.info("bookId {}", bookId);
-        log.info("questionId {}", questionId);
-        return null;
+        return ResponseEntity.ok(Flux.fromIterable(this.queryService.insertAnswers(questionId, answerList.block())));
     }
 
     @Override
@@ -204,7 +202,7 @@ public class BizToiApiImpl implements ApiApi {
     static Random random = new Random();
     static LocalDateTime date = LocalDateTime.now();
 
-    private Answer getStubAnswer(String orderId, String answerType, String questionId) {
+    private Answer getStubAnswer(int orderId, String answerType, String questionId) {
         return new Answer()
                 .id(UUID.randomUUID().toString())
                 .answer(random.nextBoolean() ? "チームで力を発揮する" : "朝礼後にチームメンバーを集めて共通目標の有用性について説明する。\n3日後までに目標を考えてくるようお願いする、\n3日後の朝礼後に再度集まり30分間チームメンバーで目標案を検討し決定する")
@@ -239,23 +237,14 @@ public class BizToiApiImpl implements ApiApi {
 
     private List<Answer> getStubAnswerList() {
         return Arrays.asList(
-                this.getStubAnswer("1", "OBJECTIVE", "00000-00000-11111"),
-                this.getStubAnswer("2", "OBJECTIVE", "00000-00000-11111"),
-                this.getStubAnswer("1", "GIST", "00000-00000-22222"),
-                this.getStubAnswer("2", "GIST", "00000-00000-22222"),
-                this.getStubAnswer("1", "GIST", "00000-00000-33333"),
-                this.getStubAnswer("1", "GIST", "00000-00000-44444"),
-                this.getStubAnswer("1", "ACTION_PLAN", "00000-00000-55555")
+                this.getStubAnswer(1, "OBJECTIVE", "00000-00000-11111"),
+                this.getStubAnswer(2, "OBJECTIVE", "00000-00000-11111"),
+                this.getStubAnswer(1, "GIST", "00000-00000-22222"),
+                this.getStubAnswer(2, "GIST", "00000-00000-22222"),
+                this.getStubAnswer(1, "GIST", "00000-00000-33333"),
+                this.getStubAnswer(1, "GIST", "00000-00000-44444"),
+                this.getStubAnswer(1, "ACTION_PLAN", "00000-00000-55555")
         );
-    }
-
-    private Question getStubQuestion(String id, String nextId, String title, String answerType, int orderId, String step, String example) {
-        return new Question()
-                .id(id)
-//                .toiId(UUID.randomUUID().toString())
-                .nextQuestionId(nextId)
-                .title(title).answerType(answerType).example(example).required(true)
-                .orderId(orderId).step(step);
     }
 
 }

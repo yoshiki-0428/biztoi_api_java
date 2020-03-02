@@ -8,13 +8,14 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
-import org.jooq.DSLContext;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -104,14 +105,25 @@ public class DataQueryService {
         return bizToiUserMap;
     }
 
+    // TODO upsert
+    public List<Answer> insertAnswers(String questionId, AnswerList answers) {
+        answers.getAnswers().forEach(answer -> {
+            Record record = this.dsl.fetchOne("insert into ANSWER (ID, ANSWER_HEAD_ID, QUESTION_ID, ANSWER, ORDER_ID) VALUES (?, ?, ?, ?, ?) returning id, inserted;",
+                    UUID.randomUUID().toString(), answer.getAnswerHeadId(), questionId, answer.getAnswer(), answer.getOrderId());
+            log.info(record.toString());
+            answer.setId((String) record.get("id"));
+            answer.setInserted(record.get("inserted").toString());
+        });
+        return answers.getAnswers();
+    }
+
     public AnswerHead insertAnswerHead(String bookId, String userId) {
-        this.dsl.insertInto(ANSWER_HEAD, ANSWER_HEAD.ID, ANSWER_HEAD.BOOK_ID, ANSWER_HEAD.USER_ID, ANSWER_HEAD.PUBLISH_FLG)
-                .values(UUID.randomUUID().toString(), bookId, userId, "1").execute();
-//        log.info(record.toString());
-//        return new AnswerHead()
-//                .id(record.getId()).bookId(record.getBookId()).userId(record.getUserId())
-//                .publishFlg(record.getPublishFlg().equals("1")).inserted(record.getInserted().toString());
-        return null;
+        Record record = this.dsl.fetchOne("insert into ANSWER_HEAD (ID, BOOK_ID, USER_ID, PUBLISH_FLG) VALUES (?, ?, ?, ?) returning id, inserted;",
+                UUID.randomUUID().toString(), bookId, userId, "1");
+        log.info(record.toString());
+        return new AnswerHead()
+                .id((String) record.getValue("id")).bookId(bookId).userId(userId)
+                .publishFlg(true).inserted(record.getValue("inserted").toString());
     }
 
     public List<AnswerHead> getAnswers(String userId, String bookId, int limit) {
