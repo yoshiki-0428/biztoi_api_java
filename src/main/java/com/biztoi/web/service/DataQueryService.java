@@ -10,6 +10,8 @@ import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -24,6 +26,8 @@ import static com.biztoi.Tables.*;
 public class DataQueryService {
     @NonNull DSLContext dsl;
     @NonNull ObjectMapper mapper;
+
+    private static final Logger log = LoggerFactory.getLogger(DataQueryService.class);
 
     public Toi findToi() {
         MstToiRecord record = this.dsl.selectFrom(MST_TOI).fetchOne();
@@ -98,6 +102,16 @@ public class DataQueryService {
                 .nickname("User NickName" + new Random().nextInt(11)).country("ja").pictureUrl("https://picsum.photos/20" + new Random().nextInt(9))
         ));
         return bizToiUserMap;
+    }
+
+    public AnswerHead insertAnswerHead(String bookId, String userId) {
+        this.dsl.insertInto(ANSWER_HEAD, ANSWER_HEAD.ID, ANSWER_HEAD.BOOK_ID, ANSWER_HEAD.USER_ID, ANSWER_HEAD.PUBLISH_FLG)
+                .values(UUID.randomUUID().toString(), bookId, userId, "1").execute();
+//        log.info(record.toString());
+//        return new AnswerHead()
+//                .id(record.getId()).bookId(record.getBookId()).userId(record.getUserId())
+//                .publishFlg(record.getPublishFlg().equals("1")).inserted(record.getInserted().toString());
+        return null;
     }
 
     public List<AnswerHead> getAnswers(String userId, String bookId, int limit) {
