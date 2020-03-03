@@ -144,6 +144,9 @@ public class DataQueryService {
     }
 
     public AnswerHead getAnswerHeadMe(String bookId, String userId) {
+        final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer(userId);
+        final Map<String, BizToiUser> bizToiUserMap = this.selectAllBizToiUserMock();
+
         log.info(this.dsl.select().from(ANSWER_HEAD).join(ANSWER).on(ANSWER_HEAD.ID.eq(ANSWER.ANSWER_HEAD_ID))
                 .where(ANSWER_HEAD.USER_ID.eq(userId).and(ANSWER_HEAD.BOOK_ID.eq(bookId))).getSQL());
         final AnswerHeadRecord result = this.dsl.selectFrom(ANSWER_HEAD).where(ANSWER_HEAD.USER_ID.eq(userId).and(ANSWER_HEAD.BOOK_ID.eq(bookId)))
@@ -162,6 +165,8 @@ public class DataQueryService {
                     .answerHeadId(record.get(ANSWER.ANSWER_HEAD_ID)).inserted(record.get(ANSWER.INSERTED).toString()).modified(record.get(ANSWER.MODIFIED).toString())
                     .orderId(record.get(ANSWER.ORDER_ID));
                 }).collect(Collectors.toList());
-        return answerHead.answers(answers);
+        return answerHead.answers(answers)
+                .likeInfo(answerLikesMap.getOrDefault(answerHead.getId(), new AnswerLikes().active(false).sum(0)))
+                .userInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null));
     }
 }
