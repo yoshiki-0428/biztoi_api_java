@@ -1,6 +1,7 @@
 package com.biztoi.web.service;
 
 import com.biztoi.model.*;
+import com.biztoi.tables.records.AnswerHeadRecord;
 import com.biztoi.tables.records.MstQuestionRecord;
 import com.biztoi.tables.records.MstToiRecord;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -143,13 +144,24 @@ public class DataQueryService {
     }
 
     public AnswerHead getAnswerHeadMe(String bookId, String userId) {
+        log.info(this.dsl.select().from(ANSWER_HEAD).join(ANSWER).on(ANSWER_HEAD.ID.eq(ANSWER.ANSWER_HEAD_ID))
+                .where(ANSWER_HEAD.USER_ID.eq(userId).and(ANSWER_HEAD.BOOK_ID.eq(bookId))).getSQL());
+        final AnswerHeadRecord result = this.dsl.selectFrom(ANSWER_HEAD).where(ANSWER_HEAD.USER_ID.eq(userId).and(ANSWER_HEAD.BOOK_ID.eq(bookId)))
+                .limit(1).fetchOne();
+        if (result == null) {
+            log.info("Not found AnswerHead record");
+            return null;
+        }
+        final AnswerHead answerHead = new AnswerHead().id(result.getId()).bookId(bookId).userId(userId).publishFlg(result.getPublishFlg().equals("1"))
+                .inserted(result.getInserted().toString()).modified(result.getModified().toString());
+
         List<Answer> answers = this.dsl.select().from(ANSWER_HEAD).join(ANSWER).on(ANSWER_HEAD.ID.eq(ANSWER.ANSWER_HEAD_ID))
-                .where(ANSWER_HEAD.USER_ID.eq(userId).and(ANSWER_HEAD.BOOK_ID.eq(bookId)))
+                .where(ANSWER_HEAD.USER_ID.eq(userId).and(ANSWER_HEAD.BOOK_ID.eq(bookId)).and(ANSWER_HEAD.ID.eq(answerHead.getId())))
                 .fetch().stream().map(record -> {
                     return new Answer().id(record.get(ANSWER.ID)).answer(record.get(ANSWER.ANSWER_))
                     .answerHeadId(record.get(ANSWER.ANSWER_HEAD_ID)).inserted(record.get(ANSWER.INSERTED).toString()).modified(record.get(ANSWER.MODIFIED).toString())
                     .orderId(record.get(ANSWER.ORDER_ID));
                 }).collect(Collectors.toList());
-        return new AnswerHead().userId(userId).bookId(bookId).answers(answers);
+        return answerHead.answers(answers);
     }
 }
