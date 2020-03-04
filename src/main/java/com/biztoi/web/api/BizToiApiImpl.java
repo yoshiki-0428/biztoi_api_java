@@ -67,6 +67,7 @@ public class BizToiApiImpl implements ApiApi {
         return ResponseEntity.ok(Flux.fromIterable(books));
     }
 
+    // 未使用
     @Override
     public ResponseEntity<Void> booksPost(@Valid Mono<Book> book, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
@@ -173,12 +174,14 @@ public class BizToiApiImpl implements ApiApi {
         return ResponseEntity.ok(this.queryService.insertAnswerHead(bookId, userId));
     }
 
+    // 未使用
     @Override
     public ResponseEntity<Void> postQuestion(String bookId, @Valid Mono<Question> question, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return null;
     }
 
+    // 未使用
     @Override
     public ResponseEntity<Toi> postToi(String bookId, @Valid Mono<Toi> toi, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
