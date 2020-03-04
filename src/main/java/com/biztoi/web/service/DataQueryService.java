@@ -130,7 +130,7 @@ public class DataQueryService {
                 .publishFlg(true).inserted(record.getValue("inserted").toString());
     }
 
-    public List<AnswerHead> getAnswerHeadList(String userId, String bookId, int limit, boolean hasUser) {
+    public List<AnswerHead> getAnswerHeadList(String userId, String bookId, Integer limit, boolean hasUser) {
         final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer(userId);
         final Map<String, BizToiUser> bizToiUserMap = this.selectAllBizToiUserMock();
 
@@ -157,7 +157,7 @@ public class DataQueryService {
     }
 
     public AnswerHead getAnswerHeadMe(String bookId, String answerHeadId, String userId) {
-        return this.getAnswerHeadList(userId, bookId, 50, true).stream()
+        return this.getAnswerHeadList(userId, bookId, null, true).stream()
                 .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null);
 //        final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer(userId);
 //        final Map<String, BizToiUser> bizToiUserMap = this.selectAllBizToiUserMock();
