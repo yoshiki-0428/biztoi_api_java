@@ -67,13 +67,6 @@ public class BizToiApiImpl implements ApiApi {
         return ResponseEntity.ok(Flux.fromIterable(books));
     }
 
-    // 未使用
-    @Override
-    public ResponseEntity<Void> booksPost(@Valid Mono<Book> book, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
-        return null;
-    }
-
     @Override
     public ResponseEntity<Void> favoriteBooks(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
@@ -84,7 +77,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<AnswerHead> getAnswerHead(String bookId, String answerHeadId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        AnswerHead result = this.queryService.getAnswers(userId, bookId, 50).stream()
+        AnswerHead result = this.queryService.getAnswerHeadList(userId, bookId, 50, false).stream()
                 .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null);
         return ResponseEntity.ok(result);
     }
@@ -92,13 +85,13 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<Flux<AnswerHead>> getAnswerHeadList(String bookId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswers(userId, bookId, 50)));
+        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswerHeadList(userId, bookId, 50, false)));
     }
 
     @Override
     public ResponseEntity<AnswerHead> getAnswerHeadMe(String bookId, String answerHeadId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(this.queryService.getAnswerHeadMe(bookId, userId));
+        return ResponseEntity.ok(this.queryService.getAnswerHeadMe(bookId, answerHeadId, userId));
     }
 
     @Override
@@ -122,15 +115,14 @@ public class BizToiApiImpl implements ApiApi {
         return ResponseEntity.ok().build();
     }
 
-    // TODO stub answerHeadId
     @Override
     public ResponseEntity<Flux<AnswerHead>> getAnswerHeadMeList(String bookId, ServerWebExchange exchange) {
-        return null;
+        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswerHeadList(userId, bookId, 50, true)));
     }
 
     @Override
     public ResponseEntity<Flux<Answer>> getAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, ServerWebExchange exchange) {
-        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswerByQuestion(bookId, questionId, userId)));
+        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswerMeByQuestion(answerHeadId, questionId, userId)));
     }
 
     @Override
@@ -178,6 +170,13 @@ public class BizToiApiImpl implements ApiApi {
 
     // 未使用
     @Override
+    public ResponseEntity<Void> booksPost(@Valid Mono<Book> book, ServerWebExchange exchange) {
+        log.info("path: {}", exchange.getRequest().getPath().toString());
+        return null;
+    }
+
+    // 未使用
+    @Override
     public ResponseEntity<Void> postQuestion(String bookId, @Valid Mono<Question> question, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return null;
@@ -190,6 +189,7 @@ public class BizToiApiImpl implements ApiApi {
         return null;
     }
 
+    // TODO stub
     @Override
     public ResponseEntity<BizToiUser> userInfo(ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
