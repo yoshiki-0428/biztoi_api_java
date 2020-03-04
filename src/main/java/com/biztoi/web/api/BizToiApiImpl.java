@@ -101,12 +101,14 @@ public class BizToiApiImpl implements ApiApi {
         return ResponseEntity.ok().build();
     }
 
+    // TODO stub
     @Override
     public ResponseEntity<AnswerHead> getAnswer(String bookId, String answerId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return ResponseEntity.ok(this.getStubAnswerHead(answerId, bookId));
     }
 
+    // TODO stub
     @Override
     public ResponseEntity<Flux<Answer>> getAnswerByQuestion(String bookId, String questionId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
@@ -123,7 +125,7 @@ public class BizToiApiImpl implements ApiApi {
     }
 
     @Override
-    public ResponseEntity<AnswerHead> getAnswersMe(String bookId, ServerWebExchange exchange) {
+    public ResponseEntity<AnswerHead> getAnswerHeadsMe(String bookId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return ResponseEntity.ok(this.queryService.getAnswerHeadMe(bookId, userId));
     }
