@@ -1,4 +1,4 @@
-create table book
+create table if not exists book
 (
     isbn varchar(13) not null
         constraint book_pkey
@@ -11,7 +11,7 @@ create table book
     categories varchar(255)
 );
 
-create table mst_toi
+create table if not exists mst_toi
 (
     title varchar(255) not null,
     detail varchar(255) not null,
@@ -20,7 +20,7 @@ create table mst_toi
         primary key (title, detail)
 );
 
-create table mst_question
+create table if not exists mst_question
 (
     id varchar(36) not null
         constraint mst_question_pk
@@ -35,7 +35,7 @@ create table mst_question
     required varchar(1) default '0'::character varying not null
 );
 
-create table answer_head
+create table if not exists answer_head
 (
     id varchar(36) not null
         constraint answer_head_pk
@@ -47,7 +47,7 @@ create table answer_head
     modified timestamp default CURRENT_TIMESTAMP
 );
 
-create table answer
+create table if not exists answer
 (
     id varchar(36) not null
         constraint answer_pk
@@ -65,7 +65,7 @@ create table answer
     modified timestamp default CURRENT_TIMESTAMP
 );
 
-create table likes
+create table if not exists likes
 (
     user_id varchar(36) not null,
     type varchar(20) not null,

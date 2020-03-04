@@ -82,6 +82,26 @@ public class BizToiApiImpl implements ApiApi {
     }
 
     @Override
+    public ResponseEntity<AnswerHead> getAnswerHead(String bookId, String answerHeadId, ServerWebExchange exchange) {
+        log.info("path: {}", exchange.getRequest().getPath().toString());
+        AnswerHead result = this.queryService.getAnswers(userId, bookId, 50).stream()
+                .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null);
+        return ResponseEntity.ok(result);
+    }
+
+    @Override
+    public ResponseEntity<Flux<AnswerHead>> getAnswerHeadList(String bookId, ServerWebExchange exchange) {
+        log.info("path: {}", exchange.getRequest().getPath().toString());
+        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswers(userId, bookId, 50)));
+    }
+
+    @Override
+    public ResponseEntity<AnswerHead> getAnswerHeadMe(String bookId, String answerHeadId, ServerWebExchange exchange) {
+        log.info("path: {}", exchange.getRequest().getPath().toString());
+        return ResponseEntity.ok(this.queryService.getAnswerHeadMe(bookId, userId));
+    }
+
+    @Override
     public ResponseEntity<Void> deleteFavoriteBooks(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         sendLikeInfo.subscribe(likeInfo -> this.queryService.deleteLike(likeInfo.getId(), "book", userId));
@@ -104,31 +124,13 @@ public class BizToiApiImpl implements ApiApi {
 
     // TODO stub answerHeadId
     @Override
-    public ResponseEntity<AnswerHead> getAnswer(String bookId, String answerId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
-        AnswerHead result = this.queryService.getAnswers(userId, bookId, 50).stream()
-                .filter(answerHead -> answerHead.getId().equals(answerId))
-                .collect(Collectors.toList()).get(0);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<Flux<AnswerHead>> getAnswerHeadMeList(String bookId, ServerWebExchange exchange) {
+        return null;
     }
 
-    // TODO stub answerHeadId
     @Override
-    public ResponseEntity<Flux<Answer>> getAnswerMeByQuestion(String bookId, String questionId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
+    public ResponseEntity<Flux<Answer>> getAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, ServerWebExchange exchange) {
         return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswerByQuestion(bookId, questionId, userId)));
-    }
-
-    @Override
-    public ResponseEntity<Flux<AnswerHead>> getAnswers(String bookId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswers(userId, bookId, 50)));
-    }
-
-    @Override
-    public ResponseEntity<AnswerHead> getAnswerHeadsMe(String bookId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(this.queryService.getAnswerHeadMe(bookId, userId));
     }
 
     @Override
@@ -163,15 +165,15 @@ public class BizToiApiImpl implements ApiApi {
     }
 
     @Override
-    public ResponseEntity<Flux<Answer>> postAnswer(String bookId, String questionId, @Valid Mono<AnswerList> answerList, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(Flux.fromIterable(this.queryService.insertAnswers(questionId, answerList.block())));
-    }
-
-    @Override
     public ResponseEntity<AnswerHead> postAnswerHead(String bookId, @Valid Mono<AnswerHead> answerHead, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return ResponseEntity.ok(this.queryService.insertAnswerHead(bookId, userId));
+    }
+
+    @Override
+    public ResponseEntity<Flux<Answer>> postAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid Mono<AnswerList> answerList, ServerWebExchange exchange) {
+        log.info("path: {}", exchange.getRequest().getPath().toString());
+        return ResponseEntity.ok(Flux.fromIterable(this.queryService.insertAnswers(questionId, answerList.block())));
     }
 
     // 未使用
@@ -200,56 +202,6 @@ public class BizToiApiImpl implements ApiApi {
     @ExceptionHandler({ FeignException.class })
     public void feignExceptionHandler(FeignException fe) {
         log.error(fe.getMessage());
-    }
-
-
-
-    static Random random = new Random();
-    static LocalDateTime date = LocalDateTime.now();
-
-    private Answer getStubAnswer(int orderId, String answerType, String questionId) {
-        return new Answer()
-                .id(UUID.randomUUID().toString())
-                .answer(random.nextBoolean() ? "チームで力を発揮する" : "朝礼後にチームメンバーを集めて共通目標の有用性について説明する。\n3日後までに目標を考えてくるようお願いする、\n3日後の朝礼後に再度集まり30分間チームメンバーで目標案を検討し決定する")
-                .answerHeadId(UUID.randomUUID().toString())
-                .questionId(questionId)
-                .orderId(orderId)
-                .inserted(date.toString())
-                .modified(date.plusDays(5).toString());
-    }
-
-    private AnswerHead getStubAnswerHead(String answerId, String bookId) {
-        return new AnswerHead()
-                .id(answerId)
-                .bookId(bookId)
-                .publishFlg(true)
-                .userId(UUID.randomUUID().toString())
-                .answers(this.getStubAnswerList())
-                .userInfo(new BizToiUser()
-                        .id(UUID.randomUUID().toString())
-                        .pictureUrl("https://picsum.photos/30/30")
-                        .nickname("Biztoi Nick")
-                        .country("jp")
-                        .email("biztoi.tool@gmail.com")
-                )
-                .likeInfo(new AnswerLikes()
-                        .active(random.nextBoolean())
-                        .sum(random.nextInt(100))
-                )
-                .inserted(date.toString())
-                .modified(date.plusDays(5).toString());
-    }
-
-    private List<Answer> getStubAnswerList() {
-        return Arrays.asList(
-                this.getStubAnswer(1, "OBJECTIVE", "00000-00000-11111"),
-                this.getStubAnswer(2, "OBJECTIVE", "00000-00000-11111"),
-                this.getStubAnswer(1, "GIST", "00000-00000-22222"),
-                this.getStubAnswer(2, "GIST", "00000-00000-22222"),
-                this.getStubAnswer(1, "GIST", "00000-00000-33333"),
-                this.getStubAnswer(1, "GIST", "00000-00000-44444"),
-                this.getStubAnswer(1, "ACTION_PLAN", "00000-00000-55555")
-        );
     }
 
 }
