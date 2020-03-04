@@ -102,21 +102,21 @@ public class BizToiApiImpl implements ApiApi {
         return ResponseEntity.ok().build();
     }
 
-    // TODO stub
+    // TODO stub answerHeadId
     @Override
     public ResponseEntity<AnswerHead> getAnswer(String bookId, String answerId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(this.getStubAnswerHead(answerId, bookId));
+        AnswerHead result = this.queryService.getAnswers(userId, bookId, 50).stream()
+                .filter(answerHead -> answerHead.getId().equals(answerId))
+                .collect(Collectors.toList()).get(0);
+        return ResponseEntity.ok(result);
     }
 
-    // TODO stub
+    // TODO stub answerHeadId
     @Override
-    public ResponseEntity<Flux<Answer>> getAnswerByQuestion(String bookId, String questionId, ServerWebExchange exchange) {
+    public ResponseEntity<Flux<Answer>> getAnswerMeByQuestion(String bookId, String questionId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(Flux.fromIterable(
-                this.getStubAnswerList().stream()
-                .filter(ans -> ans.getQuestionId().equals(questionId))
-                .collect(Collectors.toList())));
+        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswerByQuestion(bookId, questionId, userId)));
     }
 
     @Override

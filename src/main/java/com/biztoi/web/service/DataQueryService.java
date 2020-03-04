@@ -143,6 +143,11 @@ public class DataQueryService {
                 .collect(Collectors.toList());
     }
 
+    public List<Answer> getAnswerByQuestion(String bookId, String questionId, String userId) {
+//        this.dsl.selectFrom(ANSWER).where(ANSWER.)
+        return Collections.emptyList();
+    }
+
     public AnswerHead getAnswerHeadMe(String bookId, String userId) {
         final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer(userId);
         final Map<String, BizToiUser> bizToiUserMap = this.selectAllBizToiUserMock();
