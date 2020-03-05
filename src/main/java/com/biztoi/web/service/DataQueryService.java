@@ -75,14 +75,6 @@ public class DataQueryService {
                 .execute();
     }
 
-//    public List<SendLikeInfo> selectAllLikesBook(String userId) {
-//        final List<SendLikeInfo> list = new ArrayList<>();
-//        this.dsl.selectFrom(LIKES).where(LIKES.TYPE.eq("book").and(LIKES.USER_ID.eq(userId)))
-//                .fetch().forEach(likesRecord -> list.add(new SendLikeInfo().id(likesRecord.getForeignId()).active(true)));
-//        return list;
-//    }
-//
-
     public Map<String, AnswerLikes> selectAllLikesAnswer(String userId) {
         List<String> userHasLikes = this.dsl.select(LIKES.FOREIGN_ID).from(LIKES)
                 .where(LIKES.USER_ID.eq(userId).and(LIKES.TYPE.eq("answer"))).fetch().stream()
@@ -137,27 +129,25 @@ public class DataQueryService {
         Result<Record> records = this.dsl.select().from(ANSWER_HEAD).join(ANSWER).on(ANSWER_HEAD.ID.eq(ANSWER.ANSWER_HEAD_ID))
                 .where(ANSWER_HEAD.BOOK_ID.eq(bookId).and(hasUser ? ANSWER_HEAD.USER_ID.eq(userId) : DSL.noCondition()))
                 .limit(limit).fetch();
-        // TODO AnswerHeadIdでグルーピングし、それぞれの回答情報をAnswerHeadにつける
-        records.stream().collect(Collectors.groupingBy(r -> r.get(ANSWER_HEAD.ID))).entrySet().stream()
-                .forEach(r -> {
-                    log.info("key =" + r.getKey() + "value =");
-                    r.getValue().forEach(v -> log.info(v.get(ANSWER.ANSWER_)));
-                } );
+        return records.stream().collect(Collectors.groupingBy(r -> r.get(ANSWER_HEAD.ID))).values().stream()
+                .map(recordList -> {
+                    final AnswerHead entity = this.mapToAnswerHead(recordList.get(0));
+                    entity.setAnswers(recordList.stream().map(this::mapToAnswer).collect(Collectors.toList()));
+                    entity.setLikeInfo(answerLikesMap.getOrDefault(entity.getId(), new AnswerLikes().active(false).sum(0)));
+                    // TODO userInfoがStubなので修正
+                    entity.setUserInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null));
+                    return entity;
+                }).collect(Collectors.toList());
+    }
 
-//        final AnswerHead entity = this.mapToAnswerHead(records.get(0));
-//        entity.setAnswers(records.map(this::mapToAnswer));
-//        entity.setLikeInfo(answerLikesMap.getOrDefault(entity.getId(), new AnswerLikes().active(false).sum(0)));
-        // TODO userInfoがStubなので修正
-//        entity.setUserInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null));
-        return this.dsl.selectFrom(ANSWER_HEAD)
-                .where(ANSWER_HEAD.BOOK_ID.eq(bookId).and(hasUser ? ANSWER_HEAD.USER_ID.eq(userId) : DSL.noCondition()))
-                .limit(limit).fetch().stream().map(record -> new com.biztoi.model.AnswerHead().bookId(bookId)
-                            .id(record.getId()).userId(record.getUserId()).publishFlg(record.getPublishFlg().equals("1"))
-                            .inserted(record.getInserted().toString()).modified(record.getModified().toString())
-                            .likeInfo(answerLikesMap.getOrDefault(record.getId(), new AnswerLikes().active(false).sum(0)))
-                            .userInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null)))
-                .sorted(Comparator.comparing(o -> o.getLikeInfo().getSum(), Comparator.reverseOrder()))
-                .collect(Collectors.toList());
+    public List<Answer> getAnswerMeByQuestion(String answerHeadId, String questionId, String userId) {
+        return this.dsl.selectFrom(ANSWER)
+                .where(ANSWER.ANSWER_HEAD_ID.eq(answerHeadId).and(ANSWER.QUESTION_ID.eq(questionId)))
+                .fetch().stream().map(record ->
+                    new Answer().id(record.get(ANSWER.ID)).answer(record.get(ANSWER.ANSWER_))
+                            .answerHeadId(record.get(ANSWER.ANSWER_HEAD_ID)).inserted(record.get(ANSWER.INSERTED).toString()).modified(record.get(ANSWER.MODIFIED).toString())
+                            .orderId(record.get(ANSWER.ORDER_ID))
+                ).collect(Collectors.toList());
     }
 
     private AnswerHead mapToAnswerHead(Record record) {
@@ -174,16 +164,6 @@ public class DataQueryService {
                 .answer(record.get(ANSWER.ANSWER_))
                 .inserted(record.get(ANSWER.INSERTED).toString())
                 .modified(record.get(ANSWER.MODIFIED).toString());
-    }
-
-    public List<Answer> getAnswerMeByQuestion(String answerHeadId, String questionId, String userId) {
-        return this.dsl.selectFrom(ANSWER)
-                .where(ANSWER.ANSWER_HEAD_ID.eq(answerHeadId).and(ANSWER.QUESTION_ID.eq(questionId)))
-                .fetch().stream().map(record ->
-                    new Answer().id(record.get(ANSWER.ID)).answer(record.get(ANSWER.ANSWER_))
-                            .answerHeadId(record.get(ANSWER.ANSWER_HEAD_ID)).inserted(record.get(ANSWER.INSERTED).toString()).modified(record.get(ANSWER.MODIFIED).toString())
-                            .orderId(record.get(ANSWER.ORDER_ID))
-                ).collect(Collectors.toList());
     }
 
 }
