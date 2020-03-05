@@ -134,9 +134,23 @@ public class DataQueryService {
         final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer(userId);
         final Map<String, BizToiUser> bizToiUserMap = this.selectAllBizToiUserMock();
 
-        // TODO userInfo, answer table join delete random
+        Result<Record> records = this.dsl.select().from(ANSWER_HEAD).join(ANSWER).on(ANSWER_HEAD.ID.eq(ANSWER.ANSWER_HEAD_ID))
+                .where(ANSWER_HEAD.BOOK_ID.eq(bookId).and(hasUser ? ANSWER_HEAD.USER_ID.eq(userId) : DSL.noCondition()))
+                .limit(limit).fetch();
+        // TODO AnswerHeadIdでグルーピングし、それぞれの回答情報をAnswerHeadにつける
+        records.stream().collect(Collectors.groupingBy(r -> r.get(ANSWER_HEAD.ID))).entrySet().stream()
+                .forEach(r -> {
+                    log.info("key =" + r.getKey() + "value =");
+                    r.getValue().forEach(v -> log.info(v.get(ANSWER.ANSWER_)));
+                } );
+
+//        final AnswerHead entity = this.mapToAnswerHead(records.get(0));
+//        entity.setAnswers(records.map(this::mapToAnswer));
+//        entity.setLikeInfo(answerLikesMap.getOrDefault(entity.getId(), new AnswerLikes().active(false).sum(0)));
+        // TODO userInfoがStubなので修正
+//        entity.setUserInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null));
         return this.dsl.selectFrom(ANSWER_HEAD)
-                .where(ANSWER_HEAD.BOOK_ID.eq(bookId).and(hasUser ? ANSWER_HEAD.USER_ID.eq(userId) : DSL.noCondition() ))
+                .where(ANSWER_HEAD.BOOK_ID.eq(bookId).and(hasUser ? ANSWER_HEAD.USER_ID.eq(userId) : DSL.noCondition()))
                 .limit(limit).fetch().stream().map(record -> new com.biztoi.model.AnswerHead().bookId(bookId)
                             .id(record.getId()).userId(record.getUserId()).publishFlg(record.getPublishFlg().equals("1"))
                             .inserted(record.getInserted().toString()).modified(record.getModified().toString())
@@ -144,6 +158,22 @@ public class DataQueryService {
                             .userInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null)))
                 .sorted(Comparator.comparing(o -> o.getLikeInfo().getSum(), Comparator.reverseOrder()))
                 .collect(Collectors.toList());
+    }
+
+    private AnswerHead mapToAnswerHead(Record record) {
+        return new AnswerHead().bookId(record.get(ANSWER_HEAD.BOOK_ID))
+                .id(record.get(ANSWER_HEAD.ID)).userId(record.get(ANSWER_HEAD.USER_ID))
+                .publishFlg(record.get(ANSWER_HEAD.PUBLISH_FLG).equals("1"))
+                .inserted(record.get(ANSWER_HEAD.INSERTED).toString())
+                .modified(record.get(ANSWER_HEAD.MODIFIED).toString());
+    }
+
+    private Answer mapToAnswer(Record record) {
+        return new Answer()
+                .id(record.get(ANSWER.ID)).answerHeadId(record.get(ANSWER.ANSWER_HEAD_ID))
+                .answer(record.get(ANSWER.ANSWER_))
+                .inserted(record.get(ANSWER.INSERTED).toString())
+                .modified(record.get(ANSWER.MODIFIED).toString());
     }
 
     public List<Answer> getAnswerMeByQuestion(String answerHeadId, String questionId, String userId) {
@@ -156,31 +186,4 @@ public class DataQueryService {
                 ).collect(Collectors.toList());
     }
 
-    public AnswerHead getAnswerHeadMe(String bookId, String answerHeadId, String userId) {
-        return this.getAnswerHeadList(userId, bookId, null, true).stream()
-                .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null);
-//        final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer(userId);
-//        final Map<String, BizToiUser> bizToiUserMap = this.selectAllBizToiUserMock();
-//
-//        final AnswerHeadRecord result = this.dsl.selectFrom(ANSWER_HEAD)
-//                .where(ANSWER_HEAD.USER_ID.eq(userId).and(ANSWER_HEAD.BOOK_ID.eq(bookId)))
-//                .limit(1).fetchOne();
-//        if (result == null) {
-//            log.info("Not found AnswerHead record");
-//            return null;
-//        }
-//        final AnswerHead answerHead = new AnswerHead().id(result.getId()).bookId(bookId).userId(userId).publishFlg(result.getPublishFlg().equals("1"))
-//                .inserted(result.getInserted().toString()).modified(result.getModified().toString());
-//
-//        final List<Answer> answers = this.dsl.select().from(ANSWER_HEAD).join(ANSWER).on(ANSWER_HEAD.ID.eq(ANSWER.ANSWER_HEAD_ID))
-//                .where(ANSWER_HEAD.USER_ID.eq(userId).and(ANSWER_HEAD.BOOK_ID.eq(bookId)).and(ANSWER_HEAD.ID.eq(answerHead.getId())))
-//                .fetch().stream().map(record -> {
-//                    return new Answer().id(record.get(ANSWER.ID)).answer(record.get(ANSWER.ANSWER_))
-//                    .answerHeadId(record.get(ANSWER.ANSWER_HEAD_ID)).inserted(record.get(ANSWER.INSERTED).toString()).modified(record.get(ANSWER.MODIFIED).toString())
-//                    .orderId(record.get(ANSWER.ORDER_ID));
-//                }).collect(Collectors.toList());
-//        return answerHead.answers(answers)
-//                .likeInfo(answerLikesMap.getOrDefault(answerHead.getId(), new AnswerLikes().active(false).sum(0)))
-//                .userInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null));
-    }
 }

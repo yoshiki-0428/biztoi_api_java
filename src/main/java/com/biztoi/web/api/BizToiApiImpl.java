@@ -77,7 +77,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<AnswerHead> getAnswerHead(String bookId, String answerHeadId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        AnswerHead result = this.queryService.getAnswerHeadList(userId, bookId, 50, false).stream()
+        AnswerHead result = this.queryService.getAnswerHeadList(userId, bookId, null, false).stream()
                 .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null);
         return ResponseEntity.ok(result);
     }
@@ -91,7 +91,9 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<AnswerHead> getAnswerHeadMe(String bookId, String answerHeadId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(this.queryService.getAnswerHeadMe(bookId, answerHeadId, userId));
+        AnswerHead result = this.queryService.getAnswerHeadList(userId, bookId, null, true).stream()
+                .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null);
+        return ResponseEntity.ok(result);
     }
 
     @Override
