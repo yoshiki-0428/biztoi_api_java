@@ -195,7 +195,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<BizToiUser> userInfo(ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(new BizToiUser().id(UUID.randomUUID().toString())
+        return ResponseEntity.ok(new BizToiUser().id(userId)
                 .country("ja").email("biztoi@biztoi.com")
                 .nickname("biz").pictureUrl("https://picsum.photos/100/100"));
     }
