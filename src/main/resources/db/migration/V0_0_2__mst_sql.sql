@@ -1,0 +1,8 @@
+INSERT INTO public.mst_toi (title, detail, picture_url) VALUES ('行動プランをつくる', '早速回答してみましょう', null);
+
+INSERT INTO public.mst_question (id, pattern_id, order_id, title, detail, example, step, answer_type, required) VALUES ('5ae2d89a-76cb-44a3-b81a-dadaf96bf029', 0, 1, 'この本を読んだ目的を設定してみましょう', null, 'リーダーシップを身につけたい', '1', '0', '1');
+INSERT INTO public.mst_question (id, pattern_id, order_id, title, detail, example, step, answer_type, required) VALUES ('3c5d1944-4ae2-415e-8ad5-aa22aa1d9561', 0, 2, '目的を達成することでどのようなメリットがありますか？', '( 悩みの解決・収入UP etc… )', 'チームをまとめる実力を身につけ、会社の幹部へ昇格する, 後輩から慕われる存在になりたい', '1', '0', '1');
+INSERT INTO public.mst_question (id, pattern_id, order_id, title, detail, example, step, answer_type, required) VALUES ('5987534d-e272-4276-96b3-ed4d11d4313b', 0, 3, 'この本を読んで得られた知識を書き出してみましょう', null, 'チームで共通の目標を持つ', '2', '1', '1');
+INSERT INTO public.mst_question (id, pattern_id, order_id, title, detail, example, step, answer_type, required) VALUES ('a1b18af9-718d-4a92-a1bb-eb6d1d899140', 0, 4, '「この本から得た知識」×「自らの経験・知識」から「気付き」があれば書いてみよう！', null, '前に読んだ本と内容が似ているが、結論が違うので、自分なりに行動をして実際に確かめてみる', '2', '1', '1');
+INSERT INTO public.mst_question (id, pattern_id, order_id, title, detail, example, step, answer_type, required) VALUES ('9a30e12a-0446-4004-bc4f-886d56d0813b', 0, 5, '本から得た知識を使って、どのような行動ができそうか？', '(すぐに書けない時は5W1Hで考えてみよう！)', 'チームで話し合って共通の目標を作る', '3', '2', '1');
+INSERT INTO public.mst_question (id, pattern_id, order_id, title, detail, example, step, answer_type, required) VALUES ('30e7426e-1aeb-4089-b193-3622001d9f75', 0, 6, '行動プランを「自分の環境」でのやり方として、具体的に書いてみよう！', null, '朝礼後にチームメンバーを集めて共通目標の有用性について説明する。', '3', '2', '1');

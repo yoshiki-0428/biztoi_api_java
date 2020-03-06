@@ -4,11 +4,5 @@ spring:
   jooq:
     sql-dialect: postgres
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/biztoi
-    username: biztoi
-    password: biztoi
-    driverClassName: org.postgresql.Driver
-
 rakuten:
   appId: "1035252894012359396"

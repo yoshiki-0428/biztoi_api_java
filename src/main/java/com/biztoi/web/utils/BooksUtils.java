@@ -8,14 +8,14 @@ import java.util.Arrays;
 public class BooksUtils {
     public static Book to(Item item) {
         return new Book()
-                .id(item.getIsbn())
+                .isbn(item.getIsbn())
                 .title(item.getTitle())
                 .detail(item.getItemCaption())
                 .pictureUrl(item.getMediumImageUrl())
                 .linkUrl(item.getItemUrl())
                 .isbn(item.getIsbn())
-                .author(item.getAuthor() != null ? Arrays.asList(item.getAuthor().split("/")) : null)
-                .category(item.getBooksGenreId() != null ? Arrays.asList(item.getBooksGenreId().split("/")) : null)
+                .authors(item.getAuthor() != null ? Arrays.asList(item.getAuthor().split("/")) : null)
+                .categories(item.getBooksGenreId() != null ? Arrays.asList(item.getBooksGenreId().split("/")) : null)
                 .favorite(false);
     }
 }

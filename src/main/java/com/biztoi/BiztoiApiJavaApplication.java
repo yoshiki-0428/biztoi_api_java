@@ -27,12 +27,13 @@ public class BiztoiApiJavaApplication {
 	}
 
 	public static void main(String[] args) {
-		Flyway flyway = Flyway.configure().dataSource("jdbc:postgresql://localhost:5432/biztoi"
-				, "biztoi", "biztoi").load();
-		flyway.migrate();
 		SpringApplication app = new SpringApplication(BiztoiApiJavaApplication.class);
 		DefaultProfileUtil.addDefaultProfile(app);
 		Environment env = app.run(args).getEnvironment();
+
+		Flyway flyway = Flyway.configure().dataSource(env.getProperty("spring.datasource.url"),
+				env.getProperty("spring.datasource.username"), env.getProperty("spring.datasource.password")).load();
+		flyway.migrate();
 		logApplicationStartup(env);
 	}
 

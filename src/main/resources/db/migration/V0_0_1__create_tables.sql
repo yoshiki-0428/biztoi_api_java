@@ -1,4 +1,4 @@
-create table book
+create table if not exists book
 (
     isbn varchar(13) not null
         constraint book_pkey
@@ -11,7 +11,7 @@ create table book
     categories varchar(255)
 );
 
-create table mst_toi
+create table if not exists mst_toi
 (
     title varchar(255) not null,
     detail varchar(255) not null,
@@ -20,43 +20,43 @@ create table mst_toi
         primary key (title, detail)
 );
 
-create table mst_question
+create table if not exists mst_question
 (
-    id uuid not null
+    id varchar(36) not null
         constraint mst_question_pk
             primary key,
     pattern_id integer not null,
     order_id integer not null,
     title varchar(255) not null,
-    detail varchar(255) not null,
+    detail varchar(255),
     example varchar(255) not null,
     step varchar(1) not null,
     answer_type varchar(1) not null,
     required varchar(1) default '0'::character varying not null
 );
 
-create table answer_head
+create table if not exists answer_head
 (
-    id uuid not null
+    id varchar(36) not null
         constraint answer_head_pk
             primary key,
     book_id varchar(13),
-    user_id uuid not null,
+    user_id varchar(36) not null,
     publish_flg varchar(1) default '1'::character varying not null,
     inserted timestamp default CURRENT_TIMESTAMP not null,
     modified timestamp default CURRENT_TIMESTAMP
 );
 
-create table answer
+create table if not exists answer
 (
-    id uuid not null
+    id varchar(36) not null
         constraint answer_pk
             primary key,
     order_id integer not null,
-    answer_head_id uuid not null
+    answer_head_id varchar(36) not null
         constraint answer_answer_head_id_fk
             references answer_head,
-    question_id uuid not null
+    question_id varchar(36) not null
         constraint answer_mst_question_id_fk
             references mst_question,
     picture_url varchar(255),
@@ -65,13 +65,12 @@ create table answer
     modified timestamp default CURRENT_TIMESTAMP
 );
 
-create table likes
+create table if not exists likes
 (
-    id uuid not null
-        constraint likes_pk
-            primary key,
-    user_id uuid,
-    type varchar(5) not null,
-    foreign_id uuid not null,
-    inserted timestamp default CURRENT_TIMESTAMP not null
+    user_id varchar(36) not null,
+    type varchar(20) not null,
+    foreign_id varchar(36) not null,
+    inserted timestamp default CURRENT_TIMESTAMP not null,
+    constraint likes_pk
+        primary key (user_id, type, foreign_id)
 );
