@@ -8,5 +8,25 @@ spring:
     password: biztoi
     driverClassName: org.postgresql.Driver
 
+  security:
+    oauth2:
+      client:
+        registration:
+          cognito:
+            client-id: 3arup7e2af25idr5f2m3g63dsb
+            client-secret: 1vt4phdptov1eeggu150i6p2sc2aaaq35nngc8fn5cm0aoapr0jj
+            client-name: Cognito Code Grant
+            provider: cognito
+            scope: openid
+            redirectUri: http://localhost:8000/login/oauth2/code/cognito
+            authorization-grant-type: authorization_code
+        provider:
+          cognito:
+            authorization-uri: https://biztoi-app.auth.ap-northeast-1.amazoncognito.com/oauth2/authorize
+            token-uri: https://biztoi-app.auth.ap-northeast-1.amazoncognito.com/oauth2/token
+            user-info-uri: https://biztoi-app.auth.ap-northeast-1.amazoncognito.com/oauth2/userInfo
+            jwk-set-uri: https://cognito-idp.ap-northeast-1.amazonaws.com/ap-northeast-1_YsGNkmHIS/.well-known/jwks.json
+            usernameAttribute: cognito:username
+
 rakuten:
   app-id: "1035252894012359396"

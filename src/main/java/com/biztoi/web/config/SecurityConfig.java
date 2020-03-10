@@ -16,6 +16,8 @@ public class SecurityConfig {
         http.csrf().disable();
         http.logout().disable();
 
+        http.oauth2Login();
+
         // Add custom security.
 //        http.authenticationManager(this.authenticationManager);
 //        http.securityContextRepository(this.securityContextRepository);
