@@ -10,10 +10,16 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebExchange;
 
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.UnknownHostException;
 
+@RestController
 @SpringBootApplication
 @EnableFeignClients
 @Slf4j
@@ -22,7 +28,13 @@ public class BiztoiApiJavaApplication {
 
 	private final Environment env;
 
-	public BiztoiApiJavaApplication(Environment env) {
+    @GetMapping("/")
+    public void index(ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.MOVED_PERMANENTLY);
+        exchange.getResponse().getHeaders().setLocation(URI.create("http://localhost:3000"));
+    }
+
+    public BiztoiApiJavaApplication(Environment env) {
 		this.env = env;
 	}
 

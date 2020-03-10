@@ -21,11 +21,8 @@ import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @CrossOrigin
 @RestController
@@ -36,7 +33,8 @@ public class BizToiApiImpl implements ApiApi {
     @NonNull
     RakutenApiService rakutenApiService;
 
-    @NonNull DataQueryService queryService;
+    @NonNull
+    DataQueryService queryService;
 
     private static final Logger log = LoggerFactory.getLogger(BizToiApiImpl.class);
 
