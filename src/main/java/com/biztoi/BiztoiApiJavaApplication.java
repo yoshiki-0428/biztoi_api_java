@@ -18,6 +18,7 @@ import org.springframework.web.server.ServerWebExchange;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.security.Principal;
 
 @RestController
 @SpringBootApplication
@@ -29,9 +30,11 @@ public class BiztoiApiJavaApplication {
 	private final Environment env;
 
     @GetMapping("/")
-    public void index(ServerWebExchange exchange) {
+    public void index(Principal principal, ServerWebExchange exchange) {
+        log.info(principal.toString());
         exchange.getResponse().setStatusCode(HttpStatus.MOVED_PERMANENTLY);
-        exchange.getResponse().getHeaders().setLocation(URI.create("http://localhost:3000"));
+        exchange.getResponse().getHeaders().setLocation(
+                URI.create(env.getProperty("application.front-url", "http://localhost:3000/top")));
     }
 
     public BiztoiApiJavaApplication(Environment env) {

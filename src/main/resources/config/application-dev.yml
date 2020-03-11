@@ -13,20 +13,23 @@ spring:
       client:
         registration:
           biztoi-app-client:
-            client-id: 3arup7e2af25idr5f2m3g63dsb
-            client-secret: 1vt4phdptov1eeggu150i6p2sc2aaaq35nngc8fn5cm0aoapr0jj
-            client-name: biztoi-app-client
+            client-id: 7o2r51udt31kp738eumcvkj7eg
+            client-secret: 1674uobc1lvpio2v8n9qvifecljiimce9dga7drf9amrq55i8bs4
+            client-name: biztoi-app-client-dev
             provider: cognito
-            scope: openid
+            scope: openid, email, profile, aws.cognito.signin.user.admin
             redirectUri: http://localhost:8000/login/oauth2/code/cognito
             authorization-grant-type: authorization_code
         provider:
           cognito:
-            authorization-uri: https://biztoi-app.auth.ap-northeast-1.amazoncognito.com/oauth2/authorize
-            token-uri: https://biztoi-app.auth.ap-northeast-1.amazoncognito.com/oauth2/token
-            user-info-uri: https://biztoi-app.auth.ap-northeast-1.amazoncognito.com/oauth2/userInfo
-            jwk-set-uri: https://cognito-idp.ap-northeast-1.amazonaws.com/ap-northeast-1_YsGNkmHIS/.well-known/jwks.json
+            authorization-uri: https://biztoi-app-dev.auth.ap-northeast-1.amazoncognito.com/oauth2/authorize
+            token-uri: https://biztoi-app-dev.auth.ap-northeast-1.amazoncognito.com/oauth2/token
+            user-info-uri: https://biztoi-app-dev.auth.ap-northeast-1.amazoncognito.com/oauth2/userInfo
+            jwk-set-uri: https://cognito-idp.ap-northeast-1.amazonaws.com/ap-northeast-1_ccxqYNJs0/.well-known/jwks.json
             user-name-attribute: username
+
+application:
+  front-url: http://localhost:3000/top
 
 rakuten:
   app-id: "1035252894012359396"
