@@ -24,12 +24,12 @@ import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@CrossOrigin
 @RestController
 @RestControllerAdvice
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BizToiApiImpl implements ApiApi {
+
     @NonNull
     RakutenApiService rakutenApiService;
 
