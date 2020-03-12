@@ -16,8 +16,8 @@ ENV SPRING_PROFILES_ACTIVE='heroku' \
     SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_COGNITO_TOKEN-URI="https://biztoi-app-dev.auth.ap-northeast-1.amazoncognito.com/oauth2/token" \
     SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_COGNITO_USER-INFO-URI="https://biztoi-app-dev.auth.ap-northeast-1.amazoncognito.com/oauth2/userInfo" \
     SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_COGNITO_JWK-SET-URI="https://cognito-idp.ap-northeast-1.amazonaws.com/ap-northeast-1_ccxqYNJs0/.well-known/jwks.json" \
-    SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_COGNITO_USER-NAEM-ATTRIBUTE="username" \
-    APPLICATION_FRONT-URL="http://localhost:3000/top"
+    SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_COGNITO_USER-NAME-ATTRIBUTE="username" \
+    APPLICATION_FRONT-URL="http://hoge-hoge.biztoi.com/top"
 CMD echo "The application will start in ${JHIPSTER_SLEEP}s..." && \
     sleep ${JHIPSTER_SLEEP} && \
     java ${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom -jar /app.war --server.port=$PORT
