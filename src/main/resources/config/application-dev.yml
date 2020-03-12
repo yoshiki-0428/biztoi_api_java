@@ -1,6 +1,3 @@
-server:
-  port: 8000
-
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/biztoi
@@ -18,7 +15,7 @@ spring:
             client-name: biztoi-app-client-dev
             provider: cognito
             scope: openid, email, profile, aws.cognito.signin.user.admin
-            redirectUri: http://localhost:8000/login/oauth2/code/cognito
+            redirect-uri: http://localhost:8000/login/oauth2/code/cognito
             authorization-grant-type: authorization_code
         provider:
           cognito:
@@ -27,6 +24,9 @@ spring:
             user-info-uri: https://biztoi-app-dev.auth.ap-northeast-1.amazoncognito.com/oauth2/userInfo
             jwk-set-uri: https://cognito-idp.ap-northeast-1.amazonaws.com/ap-northeast-1_ccxqYNJs0/.well-known/jwks.json
             user-name-attribute: username
+
+server:
+  port: 8000
 
 application:
   front-url: http://localhost:3000/top

@@ -1,8 +1,4 @@
 spring:
-  main:
-    allow-bean-definition-overriding: true
-  jooq:
-    sql-dialect: postgres
   datasource:
     url: jdbc:postgresql://ec2-3-213-192-58.compute-1.amazonaws.com:5432/dakc80irsitdn7
     username: nuvkalnteozjei
@@ -19,7 +15,7 @@ spring:
             client-name: biztoi-app-client-dev
             provider: cognito
             scope: openid, email, profile, aws.cognito.signin.user.admin
-            redirectUri: https://biztoi-api-java.herokuapp.com/login/oauth2/code/cognito
+            redirect-uri: https://biztoi-api-java.herokuapp.com/login/oauth2/code/cognito
             authorization-grant-type: authorization_code
         provider:
           cognito:
