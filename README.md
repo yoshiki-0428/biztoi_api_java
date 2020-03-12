@@ -31,8 +31,8 @@ heroku logs --tail -a biztoi-api-java
 ## Skills
 
 - Java11
-- OpenAPI
-- SpringBoot 2.2.1
+- OpenAPI (swagger)
+- SpringBoot 2.2.4
 - Spring Security OAuth2 client
 - Spring Cloud Hoxton.SR1
 - Spring Cloud Feign
