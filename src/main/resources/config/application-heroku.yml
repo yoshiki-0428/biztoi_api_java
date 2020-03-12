@@ -19,7 +19,7 @@ spring:
             client-name: biztoi-app-client-dev
             provider: cognito
             scope: openid, email, profile, aws.cognito.signin.user.admin
-            redirectUri: http://localhost:8000/login/oauth2/code/cognito
+            redirectUri: https://biztoi-api-java.herokuapp.com/oauth2/code/cognito
             authorization-grant-type: authorization_code
         provider:
           cognito:
