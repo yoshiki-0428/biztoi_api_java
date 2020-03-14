@@ -17,7 +17,6 @@ public class SecurityConfig {
         http.httpBasic().disable();
         http.formLogin().disable();
         http.csrf().disable();
-        http.logout().disable();
 
         // OAuth2
         http.oauth2Login();
@@ -25,6 +24,7 @@ public class SecurityConfig {
 
         // authentication
         http.authorizeExchange().pathMatchers(HttpMethod.OPTIONS).permitAll();
+        http.authorizeExchange().pathMatchers(HttpMethod.POST).permitAll();
         http.authorizeExchange().pathMatchers("/oauth2/**").permitAll();
         http.authorizeExchange().pathMatchers("/api/books/").permitAll();
         http.authorizeExchange().anyExchange().authenticated();
@@ -40,7 +40,6 @@ public class SecurityConfig {
         http.csrf().disable();
 
         // OAuth2
-        http.oauth2Login();
         http.logout();
 
         // authentication

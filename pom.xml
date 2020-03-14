@@ -213,6 +213,7 @@
 							<inputSpec>src/main/openapi/reference/biztoi/openapi.yaml</inputSpec>
 							<generatorName>spring</generatorName>
 							<output>${project.build.directory}/generated-sources</output>
+              <templateDirectory>src/main/openapi/reference/mustache/spring-boot-webflux</templateDirectory>
 							<library>spring-boot</library>
 							<apiPackage>${project.groupId}.api</apiPackage>
 							<modelPackage>${project.groupId}.model</modelPackage>
