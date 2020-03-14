@@ -13,6 +13,7 @@ import lombok.experimental.FieldDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
@@ -20,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,10 +67,11 @@ public class BizToiApiImpl implements ApiApi {
     }
 
     @Override
-    public Mono<Void> favoriteBooks(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
+    public Mono<Void> favoriteBooks(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return sendLikeInfo
-                .map(likeInfo -> this.queryService.createLike(likeInfo.getId(), "book", userId))
+        return exchange.getPrincipal()
+                .map(p -> ((OAuth2AuthenticationToken) p).getPrincipal())
+                .map(user -> this.queryService.createLike(sendLikeInfo.getId(), "book", user.getAttribute("sub")))
                 .then();
     }
 
@@ -95,26 +98,31 @@ public class BizToiApiImpl implements ApiApi {
     }
 
     @Override
-    public Mono<Void> deleteFavoriteBooks(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
+    public Mono<Void> deleteFavoriteBooks(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return sendLikeInfo
-                .map(likeInfo -> this.queryService.deleteLike(likeInfo.getId(), "book", userId))
+        return exchange.getPrincipal()
+                .map(p -> ((OAuth2AuthenticationToken) p).getPrincipal())
+                .map(user -> this.queryService.deleteLike(sendLikeInfo.getId(), "book", user.getAttribute("sub")))
                 .then();
     }
 
     @Override
-    public Mono<Void> likesAnswers(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
+    public Mono<Void> likesAnswers(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return sendLikeInfo
-                .map(likeInfo -> this.queryService.createLike(likeInfo.getId(), "answer", userId))
+        // TODO Authentication Util化
+        return exchange.getPrincipal()
+                .map(p -> ((OAuth2AuthenticationToken) p).getPrincipal())
+                .map(user -> this.queryService.createLike(sendLikeInfo.getId(), "answer", user.getAttribute("sub")))
                 .then();
     }
 
     @Override
-    public Mono<Void> deleteLikesAnswers(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
+    public Mono<Void> deleteLikesAnswers(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return sendLikeInfo
-                .map(likeInfo -> this.queryService.deleteLike(likeInfo.getId(), "answer", userId))
+        // TODO Authentication Util化
+        return exchange.getPrincipal()
+                .map(p -> ((OAuth2AuthenticationToken) p).getPrincipal())
+                .map(user -> this.queryService.deleteLike(sendLikeInfo.getId(), "answer", user.getAttribute("sub")))
                 .then();
     }
 
@@ -143,7 +151,6 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Mono<Question> getBookQuestion(String bookId, String questionId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        log.info("questionId {}", questionId);
         return Mono.just(this.queryService.findQuestion(questionId));
     }
 
@@ -160,36 +167,34 @@ public class BizToiApiImpl implements ApiApi {
     }
 
     @Override
-    public Mono<AnswerHead> postAnswerHead(String bookId, @Valid Mono<AnswerHead> answerHead, ServerWebExchange exchange) {
+    public Mono<AnswerHead> postAnswerHead(String bookId, @Valid AnswerHead answerHead, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return Mono.just(this.queryService.insertAnswerHead(bookId, userId));
     }
 
     @Override
-    public Flux<Answer> postAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid Mono<AnswerList> answerList, ServerWebExchange exchange) {
+    public Flux<Answer> postAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid AnswerList answerList, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return answerList
-                .map(answer -> this.queryService.insertAnswers(questionId, answer))
-                .flatMapMany(Flux::fromIterable);
+        return Flux.fromIterable(this.queryService.insertAnswers(questionId, answerList));
     }
 
     // 未使用
     @Override
-    public Mono<Void> booksPost(@Valid Mono<Book> book, ServerWebExchange exchange) {
+    public Mono<Void> booksPost(@Valid Book book, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return null;
     }
 
     // 未使用
     @Override
-    public Mono<Void> postQuestion(String bookId, @Valid Mono<Question> question, ServerWebExchange exchange) {
+    public Mono<Void> postQuestion(String bookId, @Valid Question question, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return null;
     }
 
     // 未使用
     @Override
-    public Mono<Toi> postToi(String bookId, @Valid Mono<Toi> toi, ServerWebExchange exchange) {
+    public Mono<Toi> postToi(String bookId, @Valid Toi toi, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return null;
     }
