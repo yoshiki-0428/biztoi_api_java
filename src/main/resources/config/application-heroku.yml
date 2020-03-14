@@ -30,7 +30,7 @@ server:
   port: 8000
 
 application:
-  front-url: http://hoge-hoge.biztoi.com/top
+  front-url: http://stg.biztoi.com
 
 rakuten:
   app-id: "1035252894012359396"

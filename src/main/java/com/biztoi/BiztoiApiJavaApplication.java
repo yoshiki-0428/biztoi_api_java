@@ -34,7 +34,7 @@ public class BiztoiApiJavaApplication {
         log.info(principal.toString());
         exchange.getResponse().setStatusCode(HttpStatus.MOVED_PERMANENTLY);
         exchange.getResponse().getHeaders().setLocation(
-                URI.create(env.getProperty("application.front-url", "http://localhost:3000/top")));
+                URI.create(env.getProperty("application.front-url", "http://localhost:3000") + "/top"));
     }
 
     public BiztoiApiJavaApplication(Environment env) {

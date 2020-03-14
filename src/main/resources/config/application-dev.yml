@@ -29,7 +29,7 @@ server:
   port: 8000
 
 application:
-  front-url: http://localhost:3000/top
+  front-url: http://localhost:3000
 
 rakuten:
   app-id: "1035252894012359396"
