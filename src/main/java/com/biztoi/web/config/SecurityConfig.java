@@ -3,6 +3,7 @@ package com.biztoi.web.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
@@ -23,6 +24,7 @@ public class SecurityConfig {
         http.logout();
 
         // authentication
+        http.authorizeExchange().pathMatchers(HttpMethod.OPTIONS).permitAll();
         http.authorizeExchange().pathMatchers("/oauth2/**").permitAll();
         http.authorizeExchange().pathMatchers("/api/books/").permitAll();
         http.authorizeExchange().anyExchange().authenticated();

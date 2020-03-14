@@ -24,6 +24,8 @@ import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.springframework.http.ResponseEntity.ok;
+
 @RestController
 @RestControllerAdvice
 @AllArgsConstructor
@@ -62,14 +64,14 @@ public class BizToiApiImpl implements ApiApi {
                 .map(BooksUtils::to)
                 .map(b -> b.favorite(bookFavList.contains(b.getIsbn())))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(Flux.fromIterable(books));
+        return ok(Flux.fromIterable(books));
     }
 
     @Override
     public ResponseEntity<Void> favoriteBooks(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         sendLikeInfo.subscribe(likeInfo -> this.queryService.createLike(likeInfo.getId(), "book", userId));
-        return ResponseEntity.ok().build();
+        return ok().build();
     }
 
     @Override
@@ -77,13 +79,13 @@ public class BizToiApiImpl implements ApiApi {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         AnswerHead result = this.queryService.getAnswerHeadList(userId, bookId, null, false).stream()
                 .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null);
-        return ResponseEntity.ok(result);
+        return ok(result);
     }
 
     @Override
     public ResponseEntity<Flux<AnswerHead>> getAnswerHeadList(String bookId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswerHeadList(userId, bookId, 50, false)));
+        return ok(Flux.fromIterable(this.queryService.getAnswerHeadList(userId, bookId, 50, false)));
     }
 
     @Override
@@ -91,38 +93,38 @@ public class BizToiApiImpl implements ApiApi {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         AnswerHead result = this.queryService.getAnswerHeadList(userId, bookId, null, true).stream()
                 .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null);
-        return ResponseEntity.ok(result);
+        return ok(result);
     }
 
     @Override
     public ResponseEntity<Void> deleteFavoriteBooks(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         sendLikeInfo.subscribe(likeInfo -> this.queryService.deleteLike(likeInfo.getId(), "book", userId));
-        return ResponseEntity.ok().build();
+        return ok().build();
     }
 
     @Override
     public ResponseEntity<Void> likesAnswers(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         sendLikeInfo.subscribe(likeInfo -> this.queryService.createLike(likeInfo.getId(), "answer", userId));
-        return ResponseEntity.ok().build();
+        return ok().build();
     }
 
     @Override
     public ResponseEntity<Void> deleteLikesAnswers(@Valid Mono<SendLikeInfo> sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         sendLikeInfo.subscribe(likeInfo -> this.queryService.deleteLike(likeInfo.getId(), "answer", userId));
-        return ResponseEntity.ok().build();
+        return ok().build();
     }
 
     @Override
     public ResponseEntity<Flux<AnswerHead>> getAnswerHeadMeList(String bookId, ServerWebExchange exchange) {
-        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswerHeadList(userId, bookId, 50, true)));
+        return ok(Flux.fromIterable(this.queryService.getAnswerHeadList(userId, bookId, 50, true)));
     }
 
     @Override
     public ResponseEntity<Flux<Answer>> getAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, ServerWebExchange exchange) {
-        return ResponseEntity.ok(Flux.fromIterable(this.queryService.getAnswerMeByQuestion(answerHeadId, questionId, userId)));
+        return ok(Flux.fromIterable(this.queryService.getAnswerMeByQuestion(answerHeadId, questionId, userId)));
     }
 
     @Override
@@ -133,7 +135,7 @@ public class BizToiApiImpl implements ApiApi {
         }
 
         List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
-        return ResponseEntity.ok(BooksUtils.to(item)
+        return ok(BooksUtils.to(item)
                 .favorite(bookFavList.contains(bookId)));
     }
 
@@ -141,31 +143,33 @@ public class BizToiApiImpl implements ApiApi {
     public ResponseEntity<Question> getBookQuestion(String bookId, String questionId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         log.info("questionId {}", questionId);
-        return ResponseEntity.ok(this.queryService.findQuestion(questionId));
+        return ok(this.queryService.findQuestion(questionId));
     }
 
     @Override
     public ResponseEntity<Flux<Question>> getBookQuestions(String bookId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(Flux.fromIterable(this.queryService.findQuestionsAll()));
+        return ok(Flux.fromIterable(this.queryService.findQuestionsAll()));
     }
 
     @Override
     public ResponseEntity<Toi> getBookToi(String bookId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(this.queryService.findToi());
+        return ok(this.queryService.findToi());
     }
 
     @Override
     public ResponseEntity<AnswerHead> postAnswerHead(String bookId, @Valid Mono<AnswerHead> answerHead, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(this.queryService.insertAnswerHead(bookId, userId));
+        return ok(this.queryService.insertAnswerHead(bookId, userId));
     }
 
     @Override
     public ResponseEntity<Flux<Answer>> postAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid Mono<AnswerList> answerList, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(Flux.fromIterable(this.queryService.insertAnswers(questionId, answerList.block())));
+        return ok(answerList
+                .map(answer -> this.queryService.insertAnswers(questionId, answer))
+                .flatMapMany(Flux::fromIterable));
     }
 
     // 未使用
@@ -193,7 +197,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public ResponseEntity<BizToiUser> userInfo(ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return ResponseEntity.ok(new BizToiUser().id(userId)
+        return ok(new BizToiUser().id(userId)
                 .country("ja").email("biztoi@biztoi.com")
                 .nickname("biz").pictureUrl("https://picsum.photos/100/100"));
     }
