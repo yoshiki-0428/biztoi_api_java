@@ -5,6 +5,7 @@ import com.biztoi.model.*;
 import com.biztoi.web.service.DataQueryService;
 import com.biztoi.web.service.RakutenApiService;
 import com.biztoi.web.utils.BooksUtils;
+import com.biztoi.web.utils.PrincipalUtils;
 import feign.FeignException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -38,8 +39,6 @@ public class BizToiApiImpl implements ApiApi {
 
     private static final Logger log = LoggerFactory.getLogger(BizToiApiImpl.class);
 
-    private static String userId = "a8554f4c-569c-414c-bddd-c47707e241e1";
-
     @Override
     public Mono<Authorize> authGetToken(@NotNull @Valid String code, ServerWebExchange exchange) {
         return null;
@@ -52,99 +51,110 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Flux<Book> books(ServerWebExchange exchange) {
-        List<Item> items = this.rakutenApiService.getSalesBooks();
-        if (items == null) {
-            return Flux.empty();
-        }
-
-        List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
-        List<Book> books = items.stream()
-                .map(BooksUtils::to)
-                .map(b -> b.favorite(bookFavList.contains(b.getIsbn())))
-                .collect(Collectors.toList());
-        return Flux.fromIterable(books);
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .map(userId -> {
+                    List<Item> items = this.rakutenApiService.getSalesBooks();
+                    List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
+                    return items.stream()
+                            .map(BooksUtils::to)
+                            .map(b -> b.favorite(bookFavList.contains(b.getIsbn())))
+                            .collect(Collectors.toList());
+                })
+                .flatMapMany(Flux::fromIterable);
     }
 
     @Override
     public Mono<Void> favoriteBooks(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
-                .map(p -> ((OAuth2AuthenticationToken) p).getPrincipal())
-                .map(user -> this.queryService.createLike(sendLikeInfo.getId(), "book", user.getAttribute("sub")))
+                .map(PrincipalUtils::getUserId)
+                .map(userId -> this.queryService.createLike(sendLikeInfo.getId(), "book", userId))
                 .then();
     }
 
     @Override
     public Mono<AnswerHead> getAnswerHead(String bookId, String answerHeadId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        AnswerHead result = this.queryService.getAnswerHeadList(userId, bookId, null, false).stream()
-                .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null);
-        return Mono.just(result);
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .map(userId -> this.queryService.getAnswerHeadList(userId, bookId, null, false).stream()
+                            .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null));
     }
 
     @Override
     public Flux<AnswerHead> getAnswerHeadList(String bookId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return Flux.fromIterable(this.queryService.getAnswerHeadList(userId, bookId, 50, false));
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .map(userId ->
+                        this.queryService.getAnswerHeadList(userId, bookId, 50, false))
+                .flatMapMany(Flux::fromIterable);
     }
 
     @Override
     public Mono<AnswerHead> getAnswerHeadMe(String bookId, String answerHeadId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        AnswerHead result = this.queryService.getAnswerHeadList(userId, bookId, null, true).stream()
-                .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null);
-        return Mono.just(result);
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .map(userId -> this.queryService.getAnswerHeadList(userId, bookId, null, true).stream()
+                                .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null));
     }
 
     @Override
     public Mono<Void> deleteFavoriteBooks(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
-                .map(p -> ((OAuth2AuthenticationToken) p).getPrincipal())
-                .map(user -> this.queryService.deleteLike(sendLikeInfo.getId(), "book", user.getAttribute("sub")))
+                .map(PrincipalUtils::getUserId)
+                .map(userId -> this.queryService.deleteLike(sendLikeInfo.getId(), "book", userId))
                 .then();
     }
 
     @Override
     public Mono<Void> likesAnswers(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        // TODO Authentication Util化
         return exchange.getPrincipal()
-                .map(p -> ((OAuth2AuthenticationToken) p).getPrincipal())
-                .map(user -> this.queryService.createLike(sendLikeInfo.getId(), "answer", user.getAttribute("sub")))
+                .map(PrincipalUtils::getUserId)
+                .map(userId -> this.queryService.createLike(sendLikeInfo.getId(), "answer", userId))
                 .then();
     }
 
     @Override
     public Mono<Void> deleteLikesAnswers(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        // TODO Authentication Util化
         return exchange.getPrincipal()
-                .map(p -> ((OAuth2AuthenticationToken) p).getPrincipal())
-                .map(user -> this.queryService.deleteLike(sendLikeInfo.getId(), "answer", user.getAttribute("sub")))
+                .map(PrincipalUtils::getUserId)
+                .map(userId -> this.queryService.deleteLike(sendLikeInfo.getId(), "answer", userId))
                 .then();
     }
 
     @Override
     public Flux<AnswerHead> getAnswerHeadMeList(String bookId, ServerWebExchange exchange) {
-        return Flux.fromIterable(this.queryService.getAnswerHeadList(userId, bookId, 50, true));
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .map(userId ->
+                        this.queryService.getAnswerHeadList(userId, bookId, 50, true))
+                .flatMapMany(Flux::fromIterable);
     }
 
     @Override
     public Flux<Answer> getAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, ServerWebExchange exchange) {
-        return Flux.fromIterable(this.queryService.getAnswerMeByQuestion(answerHeadId, questionId, userId));
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .map(userId ->
+                        this.queryService.getAnswerMeByQuestion(answerHeadId, questionId, userId))
+                .flatMapMany(Flux::fromIterable);
     }
 
     @Override
     public Mono<Book> getBookId(String bookId, ServerWebExchange exchange) {
-        Item item = this.rakutenApiService.findBook(bookId);
-        if (item == null) {
-            return Mono.empty();
-        }
-
-        List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
-        return Mono.just(BooksUtils.to(item)
-                .favorite(bookFavList.contains(bookId)));
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .map(userId -> {
+                    List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
+                    return BooksUtils.to(this.rakutenApiService.findBook(bookId))
+                            .favorite(bookFavList.contains(bookId));
+                });
     }
 
     @Override
@@ -168,7 +178,9 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Mono<AnswerHead> postAnswerHead(String bookId, @Valid AnswerHead answerHead, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return Mono.just(this.queryService.insertAnswerHead(bookId, userId));
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .map(userId -> this.queryService.insertAnswerHead(bookId, userId));
     }
 
     @Override
@@ -198,13 +210,10 @@ public class BizToiApiImpl implements ApiApi {
         return null;
     }
 
-    // TODO stub
     @Override
     public Mono<BizToiUser> userInfo(ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
-        return Mono.just(new BizToiUser().id(userId)
-                .country("ja").email("biztoi@biztoi.com")
-                .nickname("biz").pictureUrl("https://picsum.photos/100/100"));
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getBizToiUser);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
