@@ -1,7 +1,6 @@
 package com.biztoi.web.service;
 
 import com.biztoi.model.*;
-import com.biztoi.tables.records.AnswerHeadRecord;
 import com.biztoi.tables.records.MstQuestionRecord;
 import com.biztoi.tables.records.MstToiRecord;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.Comparator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -28,8 +26,6 @@ import static com.biztoi.Tables.*;
 public class DataQueryService {
 
     @NonNull DSLContext dsl;
-
-    @NonNull ObjectMapper mapper;
 
     private static final Logger log = LoggerFactory.getLogger(DataQueryService.class);
 

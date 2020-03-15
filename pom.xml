@@ -31,11 +31,19 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
-		<dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-jose</artifactId>
+    </dependency>
+    <dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
@@ -205,6 +213,7 @@
 							<inputSpec>src/main/openapi/reference/biztoi/openapi.yaml</inputSpec>
 							<generatorName>spring</generatorName>
 							<output>${project.build.directory}/generated-sources</output>
+              <templateDirectory>src/main/openapi/reference/mustache/spring-boot-webflux</templateDirectory>
 							<library>spring-boot</library>
 							<apiPackage>${project.groupId}.api</apiPackage>
 							<modelPackage>${project.groupId}.model</modelPackage>

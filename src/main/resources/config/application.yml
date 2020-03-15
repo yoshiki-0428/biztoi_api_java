@@ -3,6 +3,3 @@ spring:
     allow-bean-definition-overriding: true
   jooq:
     sql-dialect: postgres
-
-rakuten:
-  appId: "1035252894012359396"
