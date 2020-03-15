@@ -15,10 +15,6 @@ public class PrincipalUtils {
 
     private static String PICTURE = "picture";
 
-    public static OAuth2User to(Principal p) {
-        return ((OAuth2AuthenticationToken) p).getPrincipal();
-    }
-
     public static String getUserId(Principal p) {
         final OAuth2User user = ((OAuth2AuthenticationToken) p).getPrincipal();
         return user.getAttribute(SUB);
