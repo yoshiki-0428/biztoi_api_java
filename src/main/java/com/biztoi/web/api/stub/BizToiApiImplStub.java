@@ -190,7 +190,6 @@ public class BizToiApiImplStub implements ApiApi {
         return null;
     }
 
-    // TODO stub
     @Override
     public Mono<BizToiUser> userInfo(ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
