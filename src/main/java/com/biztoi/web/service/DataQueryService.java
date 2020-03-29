@@ -97,11 +97,13 @@ public class DataQueryService {
         return bizToiUserMap;
     }
 
-    // TODO upsert
     public List<Answer> insertAnswers(String questionId, AnswerList answers) {
         answers.getAnswers().forEach(answer -> {
-            Record record = this.dsl.fetchOne("insert into ANSWER (ID, ANSWER_HEAD_ID, QUESTION_ID, ANSWER, ORDER_ID) VALUES (?, ?, ?, ?, ?) returning id, inserted;",
-                    UUID.randomUUID().toString(), answer.getAnswerHeadId(), questionId, answer.getAnswer(), answer.getOrderId());
+            var answerId = answer.getId() == null || answer.getId().isEmpty() ? UUID.randomUUID().toString() : answer.getId();
+            Record record = this.dsl.fetchOne("insert into ANSWER (ID, ANSWER_HEAD_ID, QUESTION_ID, ANSWER, ORDER_ID) VALUES (?, ?, ?, ?, ?)" +
+                    "on conflict (id) do update set answer = ?" +
+                    " returning id, inserted;",
+                    answerId, answer.getAnswerHeadId(), questionId, answer.getAnswer(), answer.getOrderId(), answer.getAnswer());
             log.info(record.toString());
             answer.setId((String) record.get("id"));
             answer.setInserted(record.get("inserted").toString());
@@ -157,6 +159,7 @@ public class DataQueryService {
     private Answer mapToAnswer(Record record) {
         return new Answer()
                 .id(record.get(ANSWER.ID)).answerHeadId(record.get(ANSWER.ANSWER_HEAD_ID))
+                .orderId(record.get(ANSWER.ORDER_ID)).questionId(record.get(ANSWER.QUESTION_ID))
                 .answer(record.get(ANSWER.ANSWER_))
                 .inserted(record.get(ANSWER.INSERTED).toString())
                 .modified(record.get(ANSWER.MODIFIED).toString());
