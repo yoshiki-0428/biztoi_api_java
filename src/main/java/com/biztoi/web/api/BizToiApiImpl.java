@@ -93,8 +93,10 @@ public class BizToiApiImpl implements ApiApi {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
-                .map(userId -> this.queryService.getAnswerHeadList(userId, bookId, null, false).stream()
-                            .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null));
+                .map(userId -> this.queryService.getAnswerHeadList(userId, bookId, null, false))
+                .filter(answerHeads -> answerHeads.stream().anyMatch(a -> a.getId().equals(answerHeadId)))
+                .switchIfEmpty(Mono.empty())
+                .map(a -> a.get(0));
     }
 
     @Override
@@ -112,8 +114,10 @@ public class BizToiApiImpl implements ApiApi {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
-                .map(userId -> this.queryService.getAnswerHeadList(userId, bookId, null, true).stream()
-                                .filter(answerHead -> answerHead.getId().equals(answerHeadId)).findFirst().orElse(null));
+                .map(userId -> this.queryService.getAnswerHeadList(userId, bookId, null, true))
+                .filter(answerHeads -> answerHeads.stream().anyMatch(a -> a.getId().equals(answerHeadId)))
+                .switchIfEmpty(Mono.empty())
+                .map(a -> a.get(0));
     }
 
     @Override
