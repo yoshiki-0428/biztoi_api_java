@@ -21,7 +21,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,12 +40,27 @@ public class BizToiApiImpl implements ApiApi {
     private static final Logger log = LoggerFactory.getLogger(BizToiApiImpl.class);
 
     @Override
-    public Mono<Authorize> authGetToken(@NotNull @Valid String code, ServerWebExchange exchange) {
+    public Flux<Book> bookFavoriteList(ServerWebExchange exchange) {
         return null;
     }
 
     @Override
-    public Mono<Void> authLogin(@NotNull @Valid String redirectUri, ServerWebExchange exchange) {
+    public Flux<Book> bookFavoriteListMe(ServerWebExchange exchange) {
+        return null;
+    }
+
+    @Override
+    public Flux<Book> bookLikesList(ServerWebExchange exchange) {
+        return null;
+    }
+
+    @Override
+    public Flux<Book> bookRecommendList(ServerWebExchange exchange) {
+        return null;
+    }
+
+    @Override
+    public Flux<Book> bookUnfinishedList(ServerWebExchange exchange) {
         return null;
     }
 
@@ -188,6 +202,11 @@ public class BizToiApiImpl implements ApiApi {
     public Flux<Answer> postAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid AnswerList answerList, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return Flux.fromIterable(this.queryService.insertAnswers(questionId, answerList));
+    }
+
+    @Override
+    public Flux<Answer> deleteAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid AnswerList answerList, ServerWebExchange exchange) {
+        return null;
     }
 
     // 未使用

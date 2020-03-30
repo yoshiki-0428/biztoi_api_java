@@ -43,12 +43,27 @@ public class BizToiApiImplStub implements ApiApi {
     private static String userId = "a8554f4c-569c-414c-bddd-c47707e241e1";
 
     @Override
-    public Mono<Authorize> authGetToken(@NotNull @Valid String code, ServerWebExchange exchange) {
+    public Flux<Book> bookFavoriteList(ServerWebExchange exchange) {
         return null;
     }
 
     @Override
-    public Mono<Void> authLogin(@NotNull @Valid String redirectUri, ServerWebExchange exchange) {
+    public Flux<Book> bookFavoriteListMe(ServerWebExchange exchange) {
+        return null;
+    }
+
+    @Override
+    public Flux<Book> bookLikesList(ServerWebExchange exchange) {
+        return null;
+    }
+
+    @Override
+    public Flux<Book> bookRecommendList(ServerWebExchange exchange) {
+        return null;
+    }
+
+    @Override
+    public Flux<Book> bookUnfinishedList(ServerWebExchange exchange) {
         return null;
     }
 
@@ -173,6 +188,11 @@ public class BizToiApiImplStub implements ApiApi {
     @Override
     public Mono<Void> booksPost(@Valid Book book, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
+        return null;
+    }
+
+    @Override
+    public Flux<Answer> deleteAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid AnswerList answerList, ServerWebExchange exchange) {
         return null;
     }
 
