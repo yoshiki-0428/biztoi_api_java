@@ -93,10 +93,8 @@ public class BizToiApiImpl implements ApiApi {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
-                .map(userId -> this.queryService.getAnswerHeadList(userId, bookId, null, false))
-                .filter(answerHeads -> answerHeads.stream().anyMatch(a -> a.getId().equals(answerHeadId)))
-                .switchIfEmpty(Mono.empty())
-                .map(a -> a.get(0));
+                .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId, bookId, null, false))
+                .switchIfEmpty(Mono.empty());
     }
 
     @Override
@@ -114,10 +112,10 @@ public class BizToiApiImpl implements ApiApi {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
-                .map(userId -> this.queryService.getAnswerHeadList(userId, bookId, null, true))
-                .filter(answerHeads -> answerHeads.stream().anyMatch(a -> a.getId().equals(answerHeadId)))
-                .switchIfEmpty(Mono.empty())
-                .map(a -> a.get(0));
+                .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId, bookId, null, true))
+                .switchIfEmpty(Mono.fromRunnable(() -> {
+                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                }));
     }
 
     @Override
@@ -205,12 +203,28 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Flux<Answer> postAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid AnswerList answerList, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return Flux.fromIterable(this.queryService.insertAnswers(questionId, answerList));
+
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId, bookId, null, true))
+                .switchIfEmpty(Mono.fromRunnable(() -> {
+                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                }))
+                .flatMapIterable(a -> this.queryService.insertAnswers(questionId, answerList));
     }
 
     @Override
-    public Flux<Answer> deleteAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid AnswerList answerList, ServerWebExchange exchange) {
-        return null;
+    public Mono<Void> deleteAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid AnswerList answerList, ServerWebExchange exchange) {
+        log.info("path: {}", exchange.getRequest().getPath().toString());
+
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId, bookId, null, true))
+                .switchIfEmpty(Mono.fromRunnable(() -> {
+                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                }))
+                .doOnNext(a -> this.queryService.deleteAnswers(answerList))
+                .then();
     }
 
     // 未使用

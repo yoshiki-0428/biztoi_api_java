@@ -13,6 +13,7 @@ import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -97,6 +98,11 @@ public class DataQueryService {
         return bizToiUserMap;
     }
 
+    public void deleteAnswers(AnswerList answers) {
+        answers.getAnswers().forEach(answer ->
+                this.dsl.deleteFrom(ANSWER).where(ANSWER.ID.eq(answer.getId())).execute());
+    }
+
     public List<Answer> insertAnswers(String questionId, AnswerList answers) {
         answers.getAnswers().forEach(answer -> {
             var answerId = answer.getId() == null || answer.getId().isEmpty() ? UUID.randomUUID().toString() : answer.getId();
@@ -118,6 +124,12 @@ public class DataQueryService {
         return new AnswerHead()
                 .id((String) record.getValue("id")).bookId(bookId).userId(userId)
                 .publishFlg(true).inserted(record.getValue("inserted").toString());
+    }
+
+    public Mono<AnswerHead> getAnswerHead(String answerHeadId, String userId, String bookId, Integer limit, boolean hasUser) {
+        var answerHead = this.getAnswerHeadList(userId, bookId, limit, hasUser).stream()
+                .filter(a -> a.getId().equals(answerHeadId)).findFirst().orElse(null);
+        return (answerHead != null) ? Mono.just(answerHead) : Mono.empty();
     }
 
     public List<AnswerHead> getAnswerHeadList(String userId, String bookId, Integer limit, boolean hasUser) {

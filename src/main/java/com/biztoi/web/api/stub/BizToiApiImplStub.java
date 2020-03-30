@@ -192,7 +192,7 @@ public class BizToiApiImplStub implements ApiApi {
     }
 
     @Override
-    public Flux<Answer> deleteAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid AnswerList answerList, ServerWebExchange exchange) {
+    public Mono<Void> deleteAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid AnswerList answerList, ServerWebExchange exchange) {
         return null;
     }
 
