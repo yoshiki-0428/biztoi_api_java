@@ -9,12 +9,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.web.reactive.config.CorsRegistry;
+import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
+import org.springframework.security.web.server.authentication.logout.HttpStatusReturningServerLogoutSuccessHandler;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import org.springframework.web.reactive.config.EnableWebFlux;
-import org.springframework.web.reactive.config.WebFluxConfigurer;
-import org.springframework.web.reactive.config.WebFluxConfigurerComposite;
 
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -35,13 +38,15 @@ public class SecurityConfig {
 
         // OAuth2
         http.oauth2Login();
-        http.logout();
+        http.logout()
+                .logoutSuccessHandler(new HttpStatusReturningServerLogoutSuccessHandler(HttpStatus.OK));
+        http.exceptionHandling()
+                .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED));
 
         // authentication
         http.authorizeExchange().pathMatchers(HttpMethod.OPTIONS).permitAll();
         http.authorizeExchange().pathMatchers(HttpMethod.POST).permitAll();
         http.authorizeExchange().pathMatchers("/oauth2/**").permitAll();
-        http.authorizeExchange().pathMatchers("/api/books/").permitAll();
         http.authorizeExchange().anyExchange().authenticated();
         return http.build();
     }
@@ -66,32 +71,42 @@ public class SecurityConfig {
 
     @Profile("!heroku")
     @Bean
-    public WebFluxConfigurer corsConfigurer() {
-        return new WebFluxConfigurerComposite() {
-            @Override
-            public void addCorsMappings(CorsRegistry corsRegistry) {
-                corsRegistry.addMapping("/**/**")
-                        .allowedOrigins(env.getProperty("application.front-url", "http://localhost:3000"))
-                        .allowedMethods("*")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
-            }
-        };
+    CorsConfigurationSource corsConfiguration() {
+        // CORS設定(RESTで認証させる場合は必要）
+        CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.applyPermitDefaultValues();
+        corsConfig.addAllowedMethod(HttpMethod.OPTIONS);
+        corsConfig.addAllowedMethod(HttpMethod.POST);
+        corsConfig.addAllowedMethod(HttpMethod.DELETE);
+        corsConfig.addAllowedMethod(HttpMethod.GET);
+        corsConfig.addAllowedMethod(HttpMethod.PUT);
+        corsConfig.addAllowedOrigin(env.getProperty("application.front-url", "http://localhost:3000"));
+        corsConfig.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfig);
+        return source;
     }
 
     @Profile("heroku")
     @Bean
-    public WebFluxConfigurer corsConfigurerHeroku() {
-        return new WebFluxConfigurerComposite() {
-            @Override
-            public void addCorsMappings(CorsRegistry corsRegistry) {
-                corsRegistry.addMapping("/**/**")
-                        .allowedOrigins("*")
-                        .allowedMethods("*")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
-            }
-        };
+    CorsConfigurationSource corsConfigurationHeroku() {
+        // CORS設定(RESTで認証させる場合は必要）
+        CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.applyPermitDefaultValues();
+        corsConfig.addAllowedMethod(HttpMethod.OPTIONS);
+        corsConfig.addAllowedMethod(HttpMethod.POST);
+        corsConfig.addAllowedMethod(HttpMethod.DELETE);
+        corsConfig.addAllowedMethod(HttpMethod.GET);
+        corsConfig.addAllowedMethod(HttpMethod.PUT);
+        corsConfig.addAllowedOrigin("*");
+        corsConfig.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfig);
+        return source;
     }
 
 }
