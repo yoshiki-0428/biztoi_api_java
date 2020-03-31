@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/rrrtcdish2/biztoi_api_java/feature/cognito:latest
+FROM registry.gitlab.com/rrrtcdish2/biztoi_api_java/master:latest
 ENV SPRING_PROFILES_ACTIVE='heroku'
 CMD echo "The application will start in ${JHIPSTER_SLEEP}s..." && \
     sleep ${JHIPSTER_SLEEP} && \
