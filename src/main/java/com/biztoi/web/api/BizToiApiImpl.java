@@ -112,7 +112,7 @@ public class BizToiApiImpl implements ApiApi {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
-                .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId, bookId, null, true))
+                .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId))
                 .switchIfEmpty(Mono.fromRunnable(() -> {
                     exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 }));
@@ -206,7 +206,7 @@ public class BizToiApiImpl implements ApiApi {
 
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
-                .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId, bookId, null, true))
+                .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId))
                 .switchIfEmpty(Mono.fromRunnable(() -> {
                     exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 }))

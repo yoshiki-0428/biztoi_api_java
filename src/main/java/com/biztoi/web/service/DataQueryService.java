@@ -126,6 +126,26 @@ public class DataQueryService {
                 .publishFlg(true).inserted(record.getValue("inserted").toString());
     }
 
+    public Mono<AnswerHead> getAnswerHead(String answerHeadId, String userId) {
+        final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer(userId);
+        final Map<String, BizToiUser> bizToiUserMap = this.selectAllBizToiUserMock();
+
+        Result<Record> records = this.dsl.select().from(ANSWER_HEAD).leftJoin(ANSWER).on(ANSWER_HEAD.ID.eq(ANSWER.ANSWER_HEAD_ID))
+                .where(ANSWER_HEAD.ID.eq(answerHeadId)
+                .and(ANSWER_HEAD.USER_ID.eq(userId))).fetch();
+        var result = records.stream().collect(Collectors.groupingBy(r -> r.get(ANSWER_HEAD.ID))).values().stream()
+                .map(recordList -> {
+                    final AnswerHead entity = this.mapToAnswerHead(recordList.get(0));
+                    entity.setAnswers(recordList.stream().filter(r -> r.get(ANSWER.ID) != null).map(this::mapToAnswer).collect(Collectors.toList()));
+                    entity.setLikeInfo(answerLikesMap.getOrDefault(entity.getId(), new AnswerLikes().active(false).sum(0)));
+                    // TODO userInfoがStubなので修正
+                    entity.setUserInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null));
+                    return entity;
+                }).findFirst().orElse(null);
+        return (result != null) ? Mono.just(result) : Mono.empty();
+
+    }
+
     public Mono<AnswerHead> getAnswerHead(String answerHeadId, String userId, String bookId, Integer limit, boolean hasUser) {
         var answerHead = this.getAnswerHeadList(userId, bookId, limit, hasUser).stream()
                 .filter(a -> a.getId().equals(answerHeadId)).findFirst().orElse(null);
@@ -142,7 +162,7 @@ public class DataQueryService {
         return records.stream().collect(Collectors.groupingBy(r -> r.get(ANSWER_HEAD.ID))).values().stream()
                 .map(recordList -> {
                     final AnswerHead entity = this.mapToAnswerHead(recordList.get(0));
-                    entity.setAnswers(recordList.stream().map(this::mapToAnswer).collect(Collectors.toList()));
+                    entity.setAnswers(recordList.stream().filter(r -> r.get(ANSWER.ID) != null).map(this::mapToAnswer).collect(Collectors.toList()));
                     entity.setLikeInfo(answerLikesMap.getOrDefault(entity.getId(), new AnswerLikes().active(false).sum(0)));
                     // TODO userInfoがStubなので修正
                     entity.setUserInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null));
