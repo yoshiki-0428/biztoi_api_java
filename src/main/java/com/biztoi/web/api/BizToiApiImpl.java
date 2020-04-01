@@ -58,16 +58,35 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Flux<Book> bookLikesList(ServerWebExchange exchange) {
+        // AnswerHeadのいいねサマリーマップ取得 this.queryService.selectAllLikesAnswer
+            // AnswerHead xxx : Likes 3
+            // AnswerHead yyy : Likes 2
+            // AnswerHead zzz : Likes 1
+        // 多い順から各AnswerHeadのBookIdを取得する(重複削除する) this.queryService.selectBook(ids)
         return null;
     }
 
     @Override
     public Flux<Book> bookRecommendList(ServerWebExchange exchange) {
+        // ユーザ情報取得, ユーザ情報から回答しているAnswerHead情報を取得する
+        // AnswerHeadから本の情報を取得し最も多いジャンルを集計
+        // 取得したジャンルでRakutenAPIでジャンル絞り込みで検索
         return null;
     }
 
     @Override
     public Flux<Book> bookUnfinishedList(ServerWebExchange exchange) {
+        // ユーザ情報取得
+        // 質問の必須数を取得
+        //  select count(*) from mst_question where pattern_id = '0' and required = '1';
+        // 回答したAnswerHeadIdを取得
+        //  select count(*), answer_head_id from answer join mst_question mq on answer.question_id = mq.id
+        //  where mq.required = '1' and answer.order_id = '1' group by answer_head_id;
+        // QuestionRequiredCnt: 3 => AnswerdCnt: 2 = 未回答状態
+        // QuestionRequiredCnt: 3 <= AnswerdCnt: 3 = 回答完了状態
+        // AnswerHeadIdsで本情報を取得
+        //  select book_id from answer_head;
+        // 取得した本のIDで本をDBから検索
         return null;
     }
 
