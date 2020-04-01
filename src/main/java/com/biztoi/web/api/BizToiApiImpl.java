@@ -53,7 +53,6 @@ public class BizToiApiImpl implements ApiApi {
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
                 .flatMap(userId -> Mono.just(this.queryService.getBookFavoriteListMe(userId)))
-                .map(ids -> ids.stream().map(id -> this.rakutenApiService.findBook(id)).map(BooksUtils::to).collect(toList()))
                 .flatMapMany(Flux::fromIterable);
     }
 

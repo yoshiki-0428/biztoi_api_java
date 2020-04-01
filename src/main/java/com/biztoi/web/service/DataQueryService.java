@@ -62,10 +62,11 @@ public class DataQueryService {
                 .map(r -> r.get(LIKES.FOREIGN_ID)).collect(toList());
     }
 
-    public List<String> getBookFavoriteListMe(String userId) {
-        return this.dsl.select(LIKES.FOREIGN_ID).from(LIKES)
+    public List<Book> getBookFavoriteListMe(String userId) {
+        return this.dsl.select(BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES)
+                .from(LIKES).join(BOOK).on(BOOK.ISBN.eq(LIKES.FOREIGN_ID))
                 .where(LIKES.TYPE.eq("book").and(LIKES.USER_ID.eq(userId)))
-                .fetch().stream().map(r -> r.get(LIKES.FOREIGN_ID)).collect(toList());
+                .fetch().stream().map(BooksUtils::to).collect(toList());
     }
 
     public int createLike(String id, String type, String userId) {
