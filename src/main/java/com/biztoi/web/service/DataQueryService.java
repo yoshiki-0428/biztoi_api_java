@@ -3,6 +3,7 @@ package com.biztoi.web.service;
 import com.biztoi.model.*;
 import com.biztoi.tables.records.MstQuestionRecord;
 import com.biztoi.tables.records.MstToiRecord;
+import com.biztoi.web.utils.BooksUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.ResponseMapper;
 import lombok.AccessLevel;
@@ -80,6 +81,13 @@ public class DataQueryService {
                 .execute();
     }
 
+    public List<Book> summaryFavoriteBook() {
+        return this.dsl.select(DSL.count(), BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES)
+                .from(BOOK).join(LIKES).on(BOOK.ISBN.eq(LIKES.FOREIGN_ID))
+                .groupBy(BOOK.ISBN).orderBy(DSL.count().desc())
+                .fetch().stream().map(BooksUtils::to).collect(Collectors.toList());
+    }
+
     public List<String> selectAllLikesBook() {
         return this.dsl.select(LIKES.FOREIGN_ID, DSL.count()).from(LIKES)
                 .where(LIKES.TYPE.eq("book"))
@@ -102,8 +110,8 @@ public class DataQueryService {
                                 .sum(r.get(DSL.count()))
                                 .id(r.get(LIKES.FOREIGN_ID))));
     }
-
     // TODO stub
+
     public Map<String, BizToiUser> selectAllBizToiUserMock() {
         final Map<String, BizToiUser> bizToiUserMap = new HashMap<>();
         IntStream.range(0, 10).forEach(i -> bizToiUserMap.put(String.valueOf(i), new BizToiUser()
