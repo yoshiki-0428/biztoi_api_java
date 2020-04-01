@@ -22,7 +22,8 @@ import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Profile("!heroku")
 @RestController
@@ -41,12 +42,22 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Flux<Book> bookFavoriteList(ServerWebExchange exchange) {
-        return null;
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .flatMap(userId -> Mono.just(this.queryService.selectAllLikesBook()))
+                .map(ids -> ids.stream()
+                        .map(id -> this.rakutenApiService.findBook(id)).filter(Objects::nonNull)
+                        .map(BooksUtils::to).collect(toList()))
+                .flatMapMany(Flux::fromIterable);
     }
 
     @Override
     public Flux<Book> bookFavoriteListMe(ServerWebExchange exchange) {
-        return null;
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .flatMap(userId -> Mono.just(this.queryService.getBookFavoriteListMe(userId)))
+                .map(ids -> ids.stream().map(id -> this.rakutenApiService.findBook(id)).map(BooksUtils::to).collect(toList()))
+                .flatMapMany(Flux::fromIterable);
     }
 
     @Override
@@ -74,7 +85,7 @@ public class BizToiApiImpl implements ApiApi {
                     return items.stream()
                             .map(BooksUtils::to)
                             .map(b -> b.favorite(bookFavList.contains(b.getIsbn())))
-                            .collect(Collectors.toList());
+                            .collect(toList());
                 })
                 .flatMapMany(Flux::fromIterable);
     }
@@ -82,10 +93,15 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Mono<Void> favoriteBooks(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return exchange.getPrincipal()
+        Mono<Void> createBook = Mono.just(this.rakutenApiService.findBook(sendLikeInfo.getId()))
+                .map(BooksUtils::to)
+                .map(book -> this.queryService.insertBook(book)).then();
+
+        Mono<Void> favoriteBook = exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
                 .map(userId -> this.queryService.createLike(sendLikeInfo.getId(), "book", userId))
                 .then();
+        return createBook.and(favoriteBook);
     }
 
     @Override
@@ -130,10 +146,16 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Mono<Void> likesAnswers(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return exchange.getPrincipal()
+        Mono<Void> createBook = this.queryService.findAnswerHead(sendLikeInfo.getId())
+                .map(answerHead -> this.rakutenApiService.findBook(answerHead.getBookId()))
+                .map(BooksUtils::to)
+                .map(book -> this.queryService.insertBook(book)).then();
+
+        Mono<Void> favoriteAnswer = exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
                 .map(userId -> this.queryService.createLike(sendLikeInfo.getId(), "answer", userId))
                 .then();
+        return createBook.and(favoriteAnswer);
     }
 
     @Override
@@ -165,13 +187,17 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Mono<Book> getBookId(String bookId, ServerWebExchange exchange) {
-        return exchange.getPrincipal()
+        Mono<Void> createBook = Mono.just(this.rakutenApiService.findBook(bookId))
+                .map(BooksUtils::to)
+                .map(book -> this.queryService.insertBook(book)).then();
+        Mono<Book> getBook = exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
                 .map(userId -> {
                     List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
                     return BooksUtils.to(this.rakutenApiService.findBook(bookId))
                             .favorite(bookFavList.contains(bookId));
                 });
+        return getBook.doOnNext(c -> createBook.subscribe());
     }
 
     @Override
