@@ -115,7 +115,7 @@ public class DataQueryService {
                 .join(MST_QUESTION).on(MST_QUESTION.ID.eq(ANSWER.QUESTION_ID))
                 .where(MST_QUESTION.REQUIRED.eq("1")).and(ANSWER.ORDER_ID.eq(1))
                 .groupBy(ANSWER.ANSWER_HEAD_ID)
-                .fetch().stream().filter(r -> (int) r.get(0) <= (int) requiredCnt.get(0)).map(r -> r.get(ANSWER.ANSWER_HEAD_ID)).collect(Collectors.toList());
+                .fetch().stream().filter(r -> (int) r.get(0) < (int) requiredCnt.get(0)).map(r -> r.get(ANSWER.ANSWER_HEAD_ID)).collect(Collectors.toList());
 
         if (answerHeadIds.size() == 0) {
             return Collections.emptyList();
