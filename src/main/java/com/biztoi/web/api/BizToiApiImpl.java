@@ -72,18 +72,10 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Flux<Book> bookUnfinishedList(ServerWebExchange exchange) {
-        // ユーザ情報取得
-        // 質問の必須数を取得
-        //  select count(*) from mst_question where pattern_id = '0' and required = '1';
-        // 回答したAnswerHeadIdを取得
-        //  select count(*), answer_head_id from answer join mst_question mq on answer.question_id = mq.id
-        //  where mq.required = '1' and answer.order_id = '1' group by answer_head_id;
-        // QuestionRequiredCnt: 3 => AnswerdCnt: 2 = 未回答状態
-        // QuestionRequiredCnt: 3 <= AnswerdCnt: 3 = 回答完了状態
-        // AnswerHeadIdsで本情報を取得
-        //  select book_id from answer_head;
-        // 取得した本のIDで本をDBから検索
-        return null;
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .flatMap(userId -> Mono.just(this.queryService.bookUnfinishedList(userId)))
+                .flatMapMany(Flux::fromIterable);
     }
 
     @Override

@@ -104,8 +104,34 @@ public class DataQueryService {
                 .fetch().stream().map(r -> r.get(LIKES.FOREIGN_ID)).collect(toList());
     }
 
+    // TODO リファクタ
+    public List<Book> bookUnfinishedList(String userId) {
+        // 質問の必須数を取得
+        var requiredCnt = this.dsl.selectCount().from(MST_QUESTION)
+                .where(MST_QUESTION.PATTERN_ID.eq(0)).and(MST_QUESTION.REQUIRED.eq("1")).fetchOne();
+
+        // 回答したAnswerHeadIdを取得
+        var answerHeadIds = this.dsl.select(DSL.count(), ANSWER.ANSWER_HEAD_ID).from(ANSWER)
+                .join(MST_QUESTION).on(MST_QUESTION.ID.eq(ANSWER.QUESTION_ID))
+                .where(MST_QUESTION.REQUIRED.eq("1")).and(ANSWER.ORDER_ID.eq(1))
+                .groupBy(ANSWER.ANSWER_HEAD_ID)
+                .fetch().stream().filter(r -> (int) r.get(0) <= (int) requiredCnt.get(0)).map(r -> r.get(ANSWER.ANSWER_HEAD_ID)).collect(Collectors.toList());
+
+        if (answerHeadIds.size() == 0) {
+            return Collections.emptyList();
+        }
+
+        // AnswerHeadIdsで本情報を取得
+        return this.dsl.select(BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES).distinctOn(BOOK.ISBN)
+                .from(BOOK).join(ANSWER_HEAD).on(BOOK.ISBN.eq(ANSWER_HEAD.BOOK_ID))
+                .where(ANSWER_HEAD.ID.in(answerHeadIds).and(ANSWER_HEAD.USER_ID.eq(userId)))
+                .fetch().stream().map(BooksUtils::to).collect(Collectors.toList());
+    }
+
+
     // 多い順から各AnswerHeadのBookIdを取得する(重複削除する) this.queryService.selectBook(ids)
     // TODO 正確に多い順ではないためプログラムで頑張る
+
     public List<Book> bookLikesList() {
         var subQuery = this.dsl.select(LIKES.FOREIGN_ID).from(LIKES).where(LIKES.TYPE.eq("answer")).groupBy(LIKES.FOREIGN_ID).orderBy(DSL.count().desc());
         return this.dsl.select(BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES)
@@ -114,7 +140,6 @@ public class DataQueryService {
                 .where(ANSWER_HEAD.ID.in(subQuery))
                 .fetch().stream().map(BooksUtils::to).collect(Collectors.toList());
     }
-
     public Map<String, AnswerLikes> selectAllLikesAnswer(String userId) {
         List<String> userHasLikes = this.dsl.select(LIKES.FOREIGN_ID).from(LIKES)
                 .where(LIKES.USER_ID.eq(userId).and(LIKES.TYPE.eq("answer"))).fetch().stream()
@@ -130,6 +155,7 @@ public class DataQueryService {
                                 .sum(r.get(DSL.count()))
                                 .id(r.get(LIKES.FOREIGN_ID))));
     }
+
     // TODO stub
 
     public Map<String, BizToiUser> selectAllBizToiUserMock() {
