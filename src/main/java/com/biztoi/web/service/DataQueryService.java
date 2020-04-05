@@ -104,6 +104,17 @@ public class DataQueryService {
                 .fetch().stream().map(r -> r.get(LIKES.FOREIGN_ID)).collect(toList());
     }
 
+    // 多い順から各AnswerHeadのBookIdを取得する(重複削除する) this.queryService.selectBook(ids)
+    // TODO 正確に多い順ではないためプログラムで頑張る
+    public List<Book> bookLikesList() {
+        var subQuery = this.dsl.select(LIKES.FOREIGN_ID).from(LIKES).where(LIKES.TYPE.eq("answer")).groupBy(LIKES.FOREIGN_ID).orderBy(DSL.count().desc());
+        return this.dsl.select(BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES)
+                .distinctOn(BOOK.ISBN)
+                .from(BOOK).join(ANSWER_HEAD).on(BOOK.ISBN.eq(ANSWER_HEAD.BOOK_ID))
+                .where(ANSWER_HEAD.ID.in(subQuery))
+                .fetch().stream().map(BooksUtils::to).collect(Collectors.toList());
+    }
+
     public Map<String, AnswerLikes> selectAllLikesAnswer(String userId) {
         List<String> userHasLikes = this.dsl.select(LIKES.FOREIGN_ID).from(LIKES)
                 .where(LIKES.USER_ID.eq(userId).and(LIKES.TYPE.eq("answer"))).fetch().stream()

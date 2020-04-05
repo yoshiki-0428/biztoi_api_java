@@ -58,12 +58,8 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Flux<Book> bookLikesList(ServerWebExchange exchange) {
-        // AnswerHeadのいいねサマリーマップ取得 this.queryService.selectAllLikesAnswer
-            // AnswerHead xxx : Likes 3
-            // AnswerHead yyy : Likes 2
-            // AnswerHead zzz : Likes 1
-        // 多い順から各AnswerHeadのBookIdを取得する(重複削除する) this.queryService.selectBook(ids)
-        return null;
+        final List<Book> list = this.queryService.bookLikesList();
+        return Flux.fromIterable(list);
     }
 
     @Override

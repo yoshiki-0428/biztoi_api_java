@@ -15,6 +15,8 @@ import org.springframework.security.oauth2.client.endpoint.WebClientReactiveAuth
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcReactiveOAuth2UserService;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler;
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.HttpStatusReturningServerLogoutSuccessHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
@@ -41,7 +43,10 @@ public class SecurityConfig {
         // OAuth2
         http.oauth2Login()
                 .authenticationManager(new OidcAuthorizationCodeReactiveAuthenticationManagerCustom(
-                        new WebClientReactiveAuthorizationCodeTokenResponseClient(), new OidcReactiveOAuth2UserService()));
+                        new WebClientReactiveAuthorizationCodeTokenResponseClient(), new OidcReactiveOAuth2UserService()))
+                .authenticationSuccessHandler(
+                        new RedirectServerAuthenticationSuccessHandler(env.getProperty("application.front-url", "http://localhost:3000") + "/top"))
+                .authenticationFailureHandler(new RedirectServerAuthenticationFailureHandler("/oauth2/authorization/biztoi"));
         http.logout()
                 .logoutSuccessHandler(new HttpStatusReturningServerLogoutSuccessHandler(HttpStatus.OK));
         http.exceptionHandling()

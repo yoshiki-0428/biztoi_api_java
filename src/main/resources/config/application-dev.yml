@@ -9,10 +9,10 @@ spring:
     oauth2:
       client:
         registration:
-          biztoi-app-client:
+          biztoi:
             client-id: 7o2r51udt31kp738eumcvkj7eg
             client-secret: 1674uobc1lvpio2v8n9qvifecljiimce9dga7drf9amrq55i8bs4
-            client-name: biztoi-app-client-dev
+            client-name: biztoi
             provider: cognito
             scope: openid, email, profile, aws.cognito.signin.user.admin
             redirect-uri: http://localhost:8000/login/oauth2/code/cognito
