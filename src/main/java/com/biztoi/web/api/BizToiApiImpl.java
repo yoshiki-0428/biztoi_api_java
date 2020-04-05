@@ -22,7 +22,8 @@ import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Profile("!heroku")
 @RestController
@@ -41,26 +42,51 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Flux<Book> bookFavoriteList(ServerWebExchange exchange) {
-        return null;
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .map(userId -> this.queryService.summaryFavoriteBook())
+                .flatMapMany(Flux::fromIterable);
     }
 
     @Override
     public Flux<Book> bookFavoriteListMe(ServerWebExchange exchange) {
-        return null;
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .flatMap(userId -> Mono.just(this.queryService.getBookFavoriteListMe(userId)))
+                .flatMapMany(Flux::fromIterable);
     }
 
     @Override
     public Flux<Book> bookLikesList(ServerWebExchange exchange) {
+        // AnswerHeadのいいねサマリーマップ取得 this.queryService.selectAllLikesAnswer
+            // AnswerHead xxx : Likes 3
+            // AnswerHead yyy : Likes 2
+            // AnswerHead zzz : Likes 1
+        // 多い順から各AnswerHeadのBookIdを取得する(重複削除する) this.queryService.selectBook(ids)
         return null;
     }
 
     @Override
     public Flux<Book> bookRecommendList(ServerWebExchange exchange) {
+        // ユーザ情報取得, ユーザ情報から回答しているAnswerHead情報を取得する
+        // AnswerHeadから本の情報を取得し最も多いジャンルを集計
+        // 取得したジャンルでRakutenAPIでジャンル絞り込みで検索
         return null;
     }
 
     @Override
     public Flux<Book> bookUnfinishedList(ServerWebExchange exchange) {
+        // ユーザ情報取得
+        // 質問の必須数を取得
+        //  select count(*) from mst_question where pattern_id = '0' and required = '1';
+        // 回答したAnswerHeadIdを取得
+        //  select count(*), answer_head_id from answer join mst_question mq on answer.question_id = mq.id
+        //  where mq.required = '1' and answer.order_id = '1' group by answer_head_id;
+        // QuestionRequiredCnt: 3 => AnswerdCnt: 2 = 未回答状態
+        // QuestionRequiredCnt: 3 <= AnswerdCnt: 3 = 回答完了状態
+        // AnswerHeadIdsで本情報を取得
+        //  select book_id from answer_head;
+        // 取得した本のIDで本をDBから検索
         return null;
     }
 
@@ -74,7 +100,7 @@ public class BizToiApiImpl implements ApiApi {
                     return items.stream()
                             .map(BooksUtils::to)
                             .map(b -> b.favorite(bookFavList.contains(b.getIsbn())))
-                            .collect(Collectors.toList());
+                            .collect(toList());
                 })
                 .flatMapMany(Flux::fromIterable);
     }
@@ -82,10 +108,15 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Mono<Void> favoriteBooks(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return exchange.getPrincipal()
+        Mono<Void> createBook = Mono.just(this.rakutenApiService.findBook(sendLikeInfo.getId()))
+                .map(BooksUtils::to)
+                .map(book -> this.queryService.insertBook(book)).then();
+
+        Mono<Void> favoriteBook = exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
                 .map(userId -> this.queryService.createLike(sendLikeInfo.getId(), "book", userId))
                 .then();
+        return createBook.and(favoriteBook);
     }
 
     @Override
@@ -130,10 +161,16 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Mono<Void> likesAnswers(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
-        return exchange.getPrincipal()
+        Mono<Void> createBook = this.queryService.findAnswerHead(sendLikeInfo.getId())
+                .map(answerHead -> this.rakutenApiService.findBook(answerHead.getBookId()))
+                .map(BooksUtils::to)
+                .map(book -> this.queryService.insertBook(book)).then();
+
+        Mono<Void> favoriteAnswer = exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
                 .map(userId -> this.queryService.createLike(sendLikeInfo.getId(), "answer", userId))
                 .then();
+        return createBook.and(favoriteAnswer);
     }
 
     @Override
@@ -165,13 +202,17 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Mono<Book> getBookId(String bookId, ServerWebExchange exchange) {
-        return exchange.getPrincipal()
+        Mono<Void> createBook = Mono.just(this.rakutenApiService.findBook(bookId))
+                .map(BooksUtils::to)
+                .map(book -> this.queryService.insertBook(book)).then();
+        Mono<Book> getBook = exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
                 .map(userId -> {
                     List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
                     return BooksUtils.to(this.rakutenApiService.findBook(bookId))
                             .favorite(bookFavList.contains(bookId));
                 });
+        return getBook.doOnNext(c -> createBook.subscribe());
     }
 
     @Override

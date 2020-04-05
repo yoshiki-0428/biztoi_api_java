@@ -3,7 +3,9 @@ package com.biztoi.web.service;
 import com.biztoi.model.*;
 import com.biztoi.tables.records.MstQuestionRecord;
 import com.biztoi.tables.records.MstToiRecord;
+import com.biztoi.web.utils.BooksUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.ResponseMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.biztoi.Tables.*;
+import static java.util.stream.Collectors.toList;
 
 @Service
 @AllArgsConstructor
@@ -41,7 +44,7 @@ public class DataQueryService {
                         .title(record.getTitle()).detail(record.getDetail()).id(record.getId())
                         .orderId(record.getOrderId()).patternId(record.getPatternId()).example(record.getExample())
                         .required(record.getRequired().equals("1")).step(record.getStep()))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     public Question findQuestion(String questionId) {
@@ -56,7 +59,14 @@ public class DataQueryService {
     public List<String> isFavoriteBooks(String userId) {
         return this.dsl.select(LIKES.FOREIGN_ID).from(LIKES)
                 .where(LIKES.USER_ID.eq(userId).and(LIKES.TYPE.eq("book"))).fetch().stream()
-                .map(r -> r.get(LIKES.FOREIGN_ID)).collect(Collectors.toList());
+                .map(r -> r.get(LIKES.FOREIGN_ID)).collect(toList());
+    }
+
+    public List<Book> getBookFavoriteListMe(String userId) {
+        return this.dsl.select(BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES)
+                .from(LIKES).join(BOOK).on(BOOK.ISBN.eq(LIKES.FOREIGN_ID))
+                .where(LIKES.TYPE.eq("book").and(LIKES.USER_ID.eq(userId)))
+                .fetch().stream().map(BooksUtils::to).collect(toList());
     }
 
     public int createLike(String id, String type, String userId) {
@@ -72,10 +82,24 @@ public class DataQueryService {
                 .execute();
     }
 
+    public List<Book> summaryFavoriteBook() {
+        return this.dsl.select(DSL.count(), BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES)
+                .from(BOOK).join(LIKES).on(BOOK.ISBN.eq(LIKES.FOREIGN_ID))
+                .groupBy(BOOK.ISBN).orderBy(DSL.count().desc())
+                .fetch().stream().map(BooksUtils::to).collect(Collectors.toList());
+    }
+
+    public List<String> selectAllLikesBook() {
+        return this.dsl.select(LIKES.FOREIGN_ID, DSL.count()).from(LIKES)
+                .where(LIKES.TYPE.eq("book"))
+                .groupBy(LIKES.FOREIGN_ID).orderBy(DSL.count().desc())
+                .fetch().stream().map(r -> r.get(LIKES.FOREIGN_ID)).collect(toList());
+    }
+
     public Map<String, AnswerLikes> selectAllLikesAnswer(String userId) {
         List<String> userHasLikes = this.dsl.select(LIKES.FOREIGN_ID).from(LIKES)
                 .where(LIKES.USER_ID.eq(userId).and(LIKES.TYPE.eq("answer"))).fetch().stream()
-                .map(r -> r.get(LIKES.FOREIGN_ID)).collect(Collectors.toList());
+                .map(r -> r.get(LIKES.FOREIGN_ID)).collect(toList());
 
         return this.dsl.select(LIKES.FOREIGN_ID, DSL.count()).from(LIKES)
                 .where(LIKES.TYPE.eq("answer"))
@@ -87,8 +111,8 @@ public class DataQueryService {
                                 .sum(r.get(DSL.count()))
                                 .id(r.get(LIKES.FOREIGN_ID))));
     }
-
     // TODO stub
+
     public Map<String, BizToiUser> selectAllBizToiUserMock() {
         final Map<String, BizToiUser> bizToiUserMap = new HashMap<>();
         IntStream.range(0, 10).forEach(i -> bizToiUserMap.put(String.valueOf(i), new BizToiUser()
@@ -117,6 +141,12 @@ public class DataQueryService {
         return answers.getAnswers();
     }
 
+    public int insertBook(Book book) {
+        return this.dsl.insertInto(BOOK, BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES)
+                .values(book.getTitle(), book.getIsbn(), book.getDetail(), book.getLinkUrl(), book.getPictureUrl(), String.join(",", book.getAuthors()), String.join(",", book.getCategories()))
+                .onDuplicateKeyIgnore().execute();
+    }
+
     public AnswerHead insertAnswerHead(String bookId, String userId) {
         Record record = this.dsl.fetchOne("insert into ANSWER_HEAD (ID, BOOK_ID, USER_ID, PUBLISH_FLG) VALUES (?, ?, ?, ?) returning id, inserted;",
                 UUID.randomUUID().toString(), bookId, userId, "1");
@@ -124,6 +154,19 @@ public class DataQueryService {
         return new AnswerHead()
                 .id((String) record.getValue("id")).bookId(bookId).userId(userId)
                 .publishFlg(true).inserted(record.getValue("inserted").toString());
+    }
+
+    public Mono<AnswerHead> findAnswerHead(String answerHeadId) {
+        Result<Record> records = this.dsl.select().from(ANSWER_HEAD).leftJoin(ANSWER).on(ANSWER_HEAD.ID.eq(ANSWER.ANSWER_HEAD_ID))
+                .where(ANSWER_HEAD.ID.eq(answerHeadId)).fetch();
+        var result = records.stream().collect(Collectors.groupingBy(r -> r.get(ANSWER_HEAD.ID))).values().stream()
+                .map(recordList -> {
+                    final AnswerHead entity = this.mapToAnswerHead(recordList.get(0));
+                    entity.setAnswers(recordList.stream().filter(r -> r.get(ANSWER.ID) != null).map(this::mapToAnswer).collect(toList()));
+                    return entity;
+                }).findFirst().orElse(null);
+        return (result != null) ? Mono.just(result) : Mono.empty();
+
     }
 
     public Mono<AnswerHead> getAnswerHead(String answerHeadId, String userId) {
@@ -136,7 +179,7 @@ public class DataQueryService {
         var result = records.stream().collect(Collectors.groupingBy(r -> r.get(ANSWER_HEAD.ID))).values().stream()
                 .map(recordList -> {
                     final AnswerHead entity = this.mapToAnswerHead(recordList.get(0));
-                    entity.setAnswers(recordList.stream().filter(r -> r.get(ANSWER.ID) != null).map(this::mapToAnswer).collect(Collectors.toList()));
+                    entity.setAnswers(recordList.stream().filter(r -> r.get(ANSWER.ID) != null).map(this::mapToAnswer).collect(toList()));
                     entity.setLikeInfo(answerLikesMap.getOrDefault(entity.getId(), new AnswerLikes().active(false).sum(0)));
                     // TODO userInfoがStubなので修正
                     entity.setUserInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null));
@@ -162,12 +205,12 @@ public class DataQueryService {
         return records.stream().collect(Collectors.groupingBy(r -> r.get(ANSWER_HEAD.ID))).values().stream()
                 .map(recordList -> {
                     final AnswerHead entity = this.mapToAnswerHead(recordList.get(0));
-                    entity.setAnswers(recordList.stream().filter(r -> r.get(ANSWER.ID) != null).map(this::mapToAnswer).collect(Collectors.toList()));
+                    entity.setAnswers(recordList.stream().filter(r -> r.get(ANSWER.ID) != null).map(this::mapToAnswer).collect(toList()));
                     entity.setLikeInfo(answerLikesMap.getOrDefault(entity.getId(), new AnswerLikes().active(false).sum(0)));
                     // TODO userInfoがStubなので修正
                     entity.setUserInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null));
                     return entity;
-                }).collect(Collectors.toList());
+                }).collect(toList());
     }
 
     public List<Answer> getAnswerMeByQuestion(String answerHeadId, String questionId, String userId) {
@@ -177,7 +220,7 @@ public class DataQueryService {
                     new Answer().id(record.get(ANSWER.ID)).answer(record.get(ANSWER.ANSWER_))
                             .answerHeadId(record.get(ANSWER.ANSWER_HEAD_ID)).inserted(record.get(ANSWER.INSERTED).toString()).modified(record.get(ANSWER.MODIFIED).toString())
                             .orderId(record.get(ANSWER.ORDER_ID))
-                ).collect(Collectors.toList());
+                ).collect(toList());
     }
 
     private AnswerHead mapToAnswerHead(Record record) {
@@ -196,5 +239,4 @@ public class DataQueryService {
                 .inserted(record.get(ANSWER.INSERTED).toString())
                 .modified(record.get(ANSWER.MODIFIED).toString());
     }
-
 }
