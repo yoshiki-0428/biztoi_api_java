@@ -89,6 +89,14 @@ public class DataQueryService {
                 .fetch().stream().map(BooksUtils::to).collect(Collectors.toList());
     }
 
+    public List<Book> summaryLikesAnswer() {
+        return this.dsl.select(DSL.count(), BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES)
+                .from(BOOK)
+                .join(LIKES).on(BOOK.ISBN.eq(LIKES.FOREIGN_ID))
+                .groupBy(BOOK.ISBN).orderBy(DSL.count().desc())
+                .fetch().stream().map(BooksUtils::to).collect(Collectors.toList());
+    }
+
     public List<String> selectAllLikesBook() {
         return this.dsl.select(LIKES.FOREIGN_ID, DSL.count()).from(LIKES)
                 .where(LIKES.TYPE.eq("book"))
