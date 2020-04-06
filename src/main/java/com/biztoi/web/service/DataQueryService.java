@@ -104,6 +104,19 @@ public class DataQueryService {
                 .fetch().stream().map(r -> r.get(LIKES.FOREIGN_ID)).collect(toList());
     }
 
+    // AnswerHeadから本の情報を取得し最も多いジャンルを集計
+    // 取得したジャンルでRakutenAPIでジャンル絞り込みで検索
+    // TODO リファクタ
+    public String bookRecommendList(String userId) {
+        List<String> userCategories = new ArrayList<>();
+        this.dsl.select(BOOK.CATEGORIES).from(BOOK).join(LIKES).on(BOOK.ISBN.eq(LIKES.FOREIGN_ID))
+                .where(LIKES.USER_ID.eq(userId)).fetch().map(r -> userCategories.addAll(Arrays.asList(r.get(BOOK.CATEGORIES).split(","))));
+        var userSet = userCategories.stream().collect(Collectors.groupingBy(x -> x, Collectors.counting()))
+                .entrySet().stream().sorted(java.util.Collections.reverseOrder(java.util.Map.Entry.comparingByValue())).findFirst().orElse(null);
+
+        return userSet.getKey();
+    }
+
     // TODO リファクタ
     public List<Book> bookUnfinishedList(String userId) {
         // 質問の必須数を取得

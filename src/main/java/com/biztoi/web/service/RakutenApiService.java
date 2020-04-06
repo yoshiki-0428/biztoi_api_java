@@ -49,4 +49,18 @@ public class RakutenApiService {
         log.debug(searchInfo.getItems().toString());
         return searchInfo.getItems().get(0).getItem();
     }
+
+    public List<Item> findGenre(String genre) {
+        SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
+                this.appId, genre, null, null, null, null,
+                null, "sales", null, null, null).getBody();
+        if (searchInfo == null || searchInfo.getItems() == null) {
+            return null;
+        }
+        log.debug(searchInfo.getItems().get(0).getItem().toString());
+        return searchInfo.getItems().stream()
+                .map(ItemMap::getItem)
+                .collect(Collectors.toList());
+
+    }
 }

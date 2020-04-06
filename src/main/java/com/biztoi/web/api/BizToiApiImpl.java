@@ -2,6 +2,7 @@ package com.biztoi.web.api;
 
 import com.biztoi.api.ApiApi;
 import com.biztoi.model.*;
+import com.biztoi.web.service.BooksGenre;
 import com.biztoi.web.service.DataQueryService;
 import com.biztoi.web.service.RakutenApiService;
 import com.biztoi.web.utils.BooksUtils;
@@ -64,11 +65,19 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Flux<Book> bookRecommendList(ServerWebExchange exchange) {
-        // ユーザ情報取得, ユーザ情報から回答しているAnswerHead情報を取得する
-        // AnswerHeadから本の情報を取得し最も多いジャンルを集計
-        // 取得したジャンルでRakutenAPIでジャンル絞り込みで検索
-        return null;
-    }
+        return exchange.getPrincipal()
+                .map(PrincipalUtils::getUserId)
+                .flatMap(userId -> Mono.just(this.queryService.bookRecommendList(userId)))
+                .map(BooksGenre.reverseMap::get)
+                .map(categoryId -> {
+                    List<Item> items = this.rakutenApiService.findGenre(categoryId);
+                    return items.stream()
+                            .map(BooksUtils::to)
+                            .collect(toList());
+                })
+                .flatMapMany(Flux::fromIterable);
+
+}
 
     @Override
     public Flux<Book> bookUnfinishedList(ServerWebExchange exchange) {
