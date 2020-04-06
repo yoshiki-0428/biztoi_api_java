@@ -2,9 +2,11 @@ package com.biztoi.web.utils;
 
 import com.biztoi.model.Book;
 import com.biztoi.model.Item;
+import com.biztoi.web.service.BooksGenre;
 import org.jooq.Record;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import static com.biztoi.Tables.BOOK;
 
@@ -17,7 +19,8 @@ public class BooksUtils {
                 .pictureUrl(item.getMediumImageUrl())
                 .linkUrl(item.getItemUrl())
                 .authors(item.getAuthor() != null ? Arrays.asList(item.getAuthor().split("/")) : null)
-                .categories(item.getBooksGenreId() != null ? Arrays.asList(item.getBooksGenreId().split("/")) : null)
+                .categories((item.getBooksGenreId() != null) ?
+                        Arrays.stream(item.getBooksGenreId().split("/")).map(BooksGenre.map::get).collect(Collectors.toList()) : null)
                 .favorite(false);
     }
 
