@@ -30,6 +30,6 @@ server:
 
 application:
   front-url: http://localhost:3000
-
-rakuten:
-  app-id: "1035252894012359396"
+  rakuten:
+    app-id: "1035252894012359396"
+    genre-id: "001006"

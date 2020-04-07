@@ -70,7 +70,7 @@ public class BizToiApiImpl implements ApiApi {
                 .flatMap(userId -> Mono.just(this.queryService.bookRecommendList(userId)))
                 .map(BooksGenre.reverseMap::get)
                 .map(categoryId -> {
-                    List<Item> items = this.rakutenApiService.findGenre(categoryId);
+                    List<Item> items = this.rakutenApiService.getBooksForGenre(categoryId);
                     return items.stream()
                             .map(BooksUtils::to)
                             .collect(toList());

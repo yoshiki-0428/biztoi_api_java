@@ -10,8 +10,10 @@ import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,45 +24,48 @@ public class RakutenApiService {
     @NonNull
     RakutenBooksApiClient booksApiClient;
 
-    private static final Logger log = LoggerFactory.getLogger(RakutenApiService.class);
+    @NonNull
+    Environment env;
 
-    private String appId = "1035252894012359396";
+    private static final Logger log = LoggerFactory.getLogger(RakutenApiService.class);
 
     public List<Item> getSalesBooks() {
         SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                this.appId, "001006", null, null, null, null,
+                env.getProperty("application.rakuten.app-id"), env.getProperty("application.rakuten.genre-id"), null, null, null, null,
                 null, "sales", null, null, null).getBody();
-        if (searchInfo == null || searchInfo.getItems() == null) {
-            return null;
-        }
-        log.debug(searchInfo.getItems().get(0).getItem().toString());
-        return searchInfo.getItems().stream()
-                .map(ItemMap::getItem)
-                .collect(Collectors.toList());
+
+        return filter(searchInfo);
     }
+
+    public List<Item> getBooksForGenre(String genre) {
+        SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
+                env.getProperty("application.rakuten-app-id"), genre, null, null, null, null,
+                null, "sales", null, null, null).getBody();
+
+        return filter(searchInfo);
+    }
+
 
     public Item findBook(String isbn) {
         SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                this.appId, "001", null, null, null, isbn,
+                env.getProperty("application.rakuten-app-id"), "001", null, null, null, isbn,
                 null, null, null, null, null).getBody();
         if (searchInfo == null || searchInfo.getItems() == null || searchInfo.getItems().size() == 0) {
             return null;
         }
-        log.debug(searchInfo.getItems().toString());
+
         return searchInfo.getItems().get(0).getItem();
     }
 
-    public List<Item> findGenre(String genre) {
-        SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                this.appId, genre, null, null, null, null,
-                null, "sales", null, null, null).getBody();
+    private static List<Item> filter(SearchInfo searchInfo) {
         if (searchInfo == null || searchInfo.getItems() == null) {
-            return null;
+            return Collections.emptyList();
         }
-        log.debug(searchInfo.getItems().get(0).getItem().toString());
+
         return searchInfo.getItems().stream()
                 .map(ItemMap::getItem)
+                .filter(item -> !item.getIsbn().isEmpty())
                 .collect(Collectors.toList());
-
     }
+
 }
