@@ -144,7 +144,6 @@ public class DataQueryService {
 
     // 多い順から各AnswerHeadのBookIdを取得する(重複削除する) this.queryService.selectBook(ids)
     // TODO 正確に多い順ではないためプログラムで頑張る
-
     public List<Book> bookLikesList() {
         var subQuery = this.dsl.select(LIKES.FOREIGN_ID).from(LIKES).where(LIKES.TYPE.eq("answer")).groupBy(LIKES.FOREIGN_ID).orderBy(DSL.count().desc());
         return this.dsl.select(BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES)
@@ -170,7 +169,6 @@ public class DataQueryService {
     }
 
     // TODO stub
-
     public Map<String, BizToiUser> selectAllBizToiUserMock() {
         final Map<String, BizToiUser> bizToiUserMap = new HashMap<>();
         IntStream.range(0, 10).forEach(i -> bizToiUserMap.put(String.valueOf(i), new BizToiUser()

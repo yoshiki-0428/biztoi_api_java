@@ -31,7 +31,7 @@ public class RakutenApiService {
 
     public List<Item> getBooks(final String genre) {
         SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                env.getProperty("application.rakuten.app-id"), genre, null, null, null, null,
+                env.getProperty("application.rakuten.app-id"), genre, env.getProperty("application.rakuten.aff-id"), null, null, null,
                 null, "sales", null, null, null).getBody();
 
         return filter(searchInfo);
@@ -39,7 +39,7 @@ public class RakutenApiService {
 
     public Item findBook(String isbn) {
         SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                env.getProperty("application.rakuten.app-id"), "001", null, null, null, isbn,
+                env.getProperty("application.rakuten.app-id"), "001", env.getProperty("application.rakuten.aff-id"), null, null, isbn,
                 null, null, null, null, null).getBody();
         if (searchInfo == null || searchInfo.getItems() == null || searchInfo.getItems().size() == 0) {
             return null;

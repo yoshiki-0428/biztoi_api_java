@@ -57,7 +57,11 @@ public class BizToiApiImpl implements ApiApi {
     public Flux<Book> bookFavoriteListMe(ServerWebExchange exchange) {
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
-                .flatMap(userId -> Mono.just(this.queryService.getBookFavoriteListMe(userId)))
+                .flatMap(userId -> {
+                    List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
+                    return Mono.just(this.queryService.getBookFavoriteListMe(userId)
+                            .stream().map(b -> b.favorite(bookFavList.contains(b.getIsbn()))).collect(toList()));
+                })
                 .flatMapMany(Flux::fromIterable);
     }
 

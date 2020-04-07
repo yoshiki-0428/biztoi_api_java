@@ -33,3 +33,4 @@ application:
   rakuten:
     app-id: "1035252894012359396"
     genre-id: "001006"
+    aff-id: ""
