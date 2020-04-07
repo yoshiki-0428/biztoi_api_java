@@ -29,26 +29,17 @@ public class RakutenApiService {
 
     private static final Logger log = LoggerFactory.getLogger(RakutenApiService.class);
 
-    public List<Item> getSalesBooks() {
+    public List<Item> getBooks(final String genre) {
         SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                env.getProperty("application.rakuten.app-id"), env.getProperty("application.rakuten.genre-id"), null, null, null, null,
+                env.getProperty("application.rakuten.app-id"), genre, null, null, null, null,
                 null, "sales", null, null, null).getBody();
 
         return filter(searchInfo);
     }
-
-    public List<Item> getBooksForGenre(String genre) {
-        SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                env.getProperty("application.rakuten-app-id"), genre, null, null, null, null,
-                null, "sales", null, null, null).getBody();
-
-        return filter(searchInfo);
-    }
-
 
     public Item findBook(String isbn) {
         SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                env.getProperty("application.rakuten-app-id"), "001", null, null, null, isbn,
+                env.getProperty("application.rakuten.app-id"), "001", null, null, null, isbn,
                 null, null, null, null, null).getBody();
         if (searchInfo == null || searchInfo.getItems() == null || searchInfo.getItems().size() == 0) {
             return null;

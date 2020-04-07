@@ -15,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
@@ -38,6 +39,9 @@ public class BizToiApiImpl implements ApiApi {
 
     @NonNull
     DataQueryService queryService;
+
+    @NonNull
+    Environment env;
 
     private static final Logger log = LoggerFactory.getLogger(BizToiApiImpl.class);
 
@@ -70,13 +74,12 @@ public class BizToiApiImpl implements ApiApi {
                 .flatMap(userId -> Mono.just(this.queryService.bookRecommendList(userId)))
                 .map(BooksGenre.reverseMap::get)
                 .map(categoryId -> {
-                    List<Item> items = this.rakutenApiService.getBooksForGenre(categoryId);
+                    List<Item> items = this.rakutenApiService.getBooks(categoryId);
                     return items.stream()
                             .map(BooksUtils::to)
                             .collect(toList());
                 })
                 .flatMapMany(Flux::fromIterable);
-
 }
 
     @Override
@@ -92,7 +95,7 @@ public class BizToiApiImpl implements ApiApi {
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getUserId)
                 .map(userId -> {
-                    List<Item> items = this.rakutenApiService.getSalesBooks();
+                    List<Item> items = this.rakutenApiService.getBooks(env.getProperty("application.rakuten.genre-id"));
                     List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
                     return items.stream()
                             .map(BooksUtils::to)

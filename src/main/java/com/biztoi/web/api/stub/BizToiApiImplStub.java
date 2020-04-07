@@ -69,7 +69,7 @@ public class BizToiApiImplStub implements ApiApi {
 
     @Override
     public Flux<Book> books(ServerWebExchange exchange) {
-        List<Item> items = this.rakutenApiService.getSalesBooks();
+        List<Item> items = this.rakutenApiService.getBooks(null);
         if (items == null) {
             return Flux.empty();
         }
