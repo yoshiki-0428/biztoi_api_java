@@ -72,8 +72,10 @@ public class DataQueryService {
     public int createLike(String id, String type, String userId) {
         return this.dsl
                 .insertInto(LIKES, LIKES.FOREIGN_ID, LIKES.TYPE, LIKES.USER_ID)
-                .values(id, type, userId).execute();
+                .values(id, type, userId)
+                .onDuplicateKeyIgnore().execute();
     }
+
     public int deleteLike(String id, String type, String userId) {
         return this.dsl.deleteFrom(LIKES)
                 .where(LIKES.FOREIGN_ID.eq(id)
