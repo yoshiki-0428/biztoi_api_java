@@ -32,7 +32,6 @@ public class SecurityConfig {
     @NonNull
     Environment env;
 
-    @Profile("!heroku")
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         // Disable default security.
@@ -60,25 +59,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Profile("heroku")
-    @Bean
-    public SecurityWebFilterChain securityWebFilterChainHeroku(ServerHttpSecurity http) {
-        // Disable default security.
-        http.httpBasic().disable();
-        http.formLogin().disable();
-        http.csrf().disable();
-
-        // OAuth2
-        http.oauth2Login();
-        http.logout();
-
-        // authentication
-        http.authorizeExchange().pathMatchers("/**/**").permitAll();
-        http.authorizeExchange().anyExchange().authenticated();
-        return http.build();
-    }
-
-    @Profile("!heroku")
     @Bean
     CorsConfigurationSource corsConfiguration() {
         // CORS設定(RESTで認証させる場合は必要）
@@ -90,26 +70,6 @@ public class SecurityConfig {
         corsConfig.addAllowedMethod(HttpMethod.GET);
         corsConfig.addAllowedMethod(HttpMethod.PUT);
         corsConfig.addAllowedOrigin(env.getProperty("application.front-url", "http://localhost:3000"));
-        corsConfig.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfig);
-        return source;
-    }
-
-    @Profile("heroku")
-    @Bean
-    CorsConfigurationSource corsConfigurationHeroku() {
-        // CORS設定(RESTで認証させる場合は必要）
-        CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.applyPermitDefaultValues();
-        corsConfig.addAllowedMethod(HttpMethod.OPTIONS);
-        corsConfig.addAllowedMethod(HttpMethod.POST);
-        corsConfig.addAllowedMethod(HttpMethod.DELETE);
-        corsConfig.addAllowedMethod(HttpMethod.GET);
-        corsConfig.addAllowedMethod(HttpMethod.PUT);
-        corsConfig.addAllowedOrigin("*");
         corsConfig.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
