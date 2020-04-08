@@ -4,8 +4,6 @@ import com.biztoi.model.*;
 import com.biztoi.tables.records.MstQuestionRecord;
 import com.biztoi.tables.records.MstToiRecord;
 import com.biztoi.web.utils.BooksUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import feign.ResponseMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -14,6 +12,7 @@ import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -29,7 +28,11 @@ import static java.util.stream.Collectors.toList;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DataQueryService {
 
-    @NonNull DSLContext dsl;
+    @NonNull
+    DSLContext dsl;
+
+    @NonNull
+    Environment env;
 
     private static final Logger log = LoggerFactory.getLogger(DataQueryService.class);
 
@@ -58,20 +61,20 @@ public class DataQueryService {
 
     public List<String> isFavoriteBooks(String userId) {
         return this.dsl.select(LIKES.FOREIGN_ID).from(LIKES)
-                .where(LIKES.USER_ID.eq(userId).and(LIKES.TYPE.eq("book"))).fetch().stream()
+                .where(LIKES.USER_ID.eq(userId).and(LIKES.LIKES_TYPE.eq("book"))).fetch().stream()
                 .map(r -> r.get(LIKES.FOREIGN_ID)).collect(toList());
     }
 
     public List<Book> getBookFavoriteListMe(String userId) {
         return this.dsl.select(BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES)
                 .from(LIKES).join(BOOK).on(BOOK.ISBN.eq(LIKES.FOREIGN_ID))
-                .where(LIKES.TYPE.eq("book").and(LIKES.USER_ID.eq(userId)))
+                .where(LIKES.LIKES_TYPE.eq("book").and(LIKES.USER_ID.eq(userId)))
                 .fetch().stream().map(BooksUtils::to).collect(toList());
     }
 
     public int createLike(String id, String type, String userId) {
         return this.dsl
-                .insertInto(LIKES, LIKES.FOREIGN_ID, LIKES.TYPE, LIKES.USER_ID)
+                .insertInto(LIKES, LIKES.FOREIGN_ID, LIKES.LIKES_TYPE, LIKES.USER_ID)
                 .values(id, type, userId)
                 .onDuplicateKeyIgnore().execute();
     }
@@ -79,7 +82,7 @@ public class DataQueryService {
     public int deleteLike(String id, String type, String userId) {
         return this.dsl.deleteFrom(LIKES)
                 .where(LIKES.FOREIGN_ID.eq(id)
-                        .and(LIKES.TYPE.eq(type)
+                        .and(LIKES.LIKES_TYPE.eq(type)
                         .and(LIKES.USER_ID.cast(String.class).eq(userId))))
                 .execute();
     }
@@ -101,22 +104,27 @@ public class DataQueryService {
 
     public List<String> selectAllLikesBook() {
         return this.dsl.select(LIKES.FOREIGN_ID, DSL.count()).from(LIKES)
-                .where(LIKES.TYPE.eq("book"))
+                .where(LIKES.LIKES_TYPE.eq("book"))
                 .groupBy(LIKES.FOREIGN_ID).orderBy(DSL.count().desc())
                 .fetch().stream().map(r -> r.get(LIKES.FOREIGN_ID)).collect(toList());
     }
 
-    // AnswerHeadから本の情報を取得し最も多いジャンルを集計
-    // 取得したジャンルでRakutenAPIでジャンル絞り込みで検索
-    // TODO リファクタ
+    /**
+     * AnswerHeadから本の情報を取得し最も多いジャンルを集計
+     * 取得したジャンルでRakutenAPIでジャンル絞り込みで検索
+     *
+     * @param userId
+     * @return
+     */
     public String bookRecommendList(String userId) {
         List<String> userCategories = new ArrayList<>();
         this.dsl.select(BOOK.CATEGORIES).from(BOOK).join(LIKES).on(BOOK.ISBN.eq(LIKES.FOREIGN_ID))
                 .where(LIKES.USER_ID.eq(userId)).fetch().map(r -> userCategories.addAll(Arrays.asList(r.get(BOOK.CATEGORIES).split(","))));
-        var userSet = userCategories.stream().collect(Collectors.groupingBy(x -> x, Collectors.counting()))
-                .entrySet().stream().sorted(java.util.Collections.reverseOrder(java.util.Map.Entry.comparingByValue())).findFirst().orElse(null);
+        var groupingEntrySet = userCategories.stream()
+                .collect(Collectors.groupingBy(x -> x, Collectors.counting())).entrySet();
+        var recommendGenre = groupingEntrySet.stream().max(Map.Entry.comparingByValue());
 
-        return userSet.getKey();
+        return recommendGenre.isEmpty() ? BooksGenre.map.get(env.getProperty("application.rakuten.genre-id")) : recommendGenre.get().getKey();
     }
 
     // TODO リファクタ
@@ -147,20 +155,21 @@ public class DataQueryService {
     // 多い順から各AnswerHeadのBookIdを取得する(重複削除する) this.queryService.selectBook(ids)
     // TODO 正確に多い順ではないためプログラムで頑張る
     public List<Book> bookLikesList() {
-        var subQuery = this.dsl.select(LIKES.FOREIGN_ID).from(LIKES).where(LIKES.TYPE.eq("answer")).groupBy(LIKES.FOREIGN_ID).orderBy(DSL.count().desc());
+        var subQuery = this.dsl.select(LIKES.FOREIGN_ID).from(LIKES).where(LIKES.LIKES_TYPE.eq("answer")).groupBy(LIKES.FOREIGN_ID).orderBy(DSL.count().desc());
         return this.dsl.select(BOOK.TITLE, BOOK.ISBN, BOOK.DETAIL, BOOK.LINK_URL, BOOK.PICTURE_URL, BOOK.AUTHORS, BOOK.CATEGORIES)
                 .distinctOn(BOOK.ISBN)
                 .from(BOOK).join(ANSWER_HEAD).on(BOOK.ISBN.eq(ANSWER_HEAD.BOOK_ID))
                 .where(ANSWER_HEAD.ID.in(subQuery))
                 .fetch().stream().map(BooksUtils::to).collect(Collectors.toList());
     }
+
     public Map<String, AnswerLikes> selectAllLikesAnswer(String userId) {
         List<String> userHasLikes = this.dsl.select(LIKES.FOREIGN_ID).from(LIKES)
-                .where(LIKES.USER_ID.eq(userId).and(LIKES.TYPE.eq("answer"))).fetch().stream()
+                .where(LIKES.USER_ID.eq(userId).and(LIKES.LIKES_TYPE.eq("answer"))).fetch().stream()
                 .map(r -> r.get(LIKES.FOREIGN_ID)).collect(toList());
 
         return this.dsl.select(LIKES.FOREIGN_ID, DSL.count()).from(LIKES)
-                .where(LIKES.TYPE.eq("answer"))
+                .where(LIKES.LIKES_TYPE.eq("answer"))
                 .groupBy(LIKES.FOREIGN_ID).orderBy(DSL.count().desc())
                 .fetch().stream().collect(Collectors.toMap(
                         r -> r.get(LIKES.FOREIGN_ID),

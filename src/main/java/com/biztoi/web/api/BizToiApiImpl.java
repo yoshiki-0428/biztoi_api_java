@@ -48,7 +48,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Flux<Book> bookFavoriteList(ServerWebExchange exchange) {
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> this.queryService.summaryFavoriteBook())
                 .flatMapMany(Flux::fromIterable);
     }
@@ -56,7 +56,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Flux<Book> bookFavoriteListMe(ServerWebExchange exchange) {
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .flatMap(userId -> {
                     List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
                     return Mono.just(this.queryService.getBookFavoriteListMe(userId)
@@ -74,7 +74,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Flux<Book> bookRecommendList(ServerWebExchange exchange) {
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .flatMap(userId -> Mono.just(this.queryService.bookRecommendList(userId)))
                 .map(BooksGenre.reverseMap::get)
                 .map(categoryId -> {
@@ -84,12 +84,12 @@ public class BizToiApiImpl implements ApiApi {
                             .collect(toList());
                 })
                 .flatMapMany(Flux::fromIterable);
-}
+    }
 
     @Override
     public Flux<Book> bookUnfinishedList(ServerWebExchange exchange) {
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .flatMap(userId -> Mono.just(this.queryService.bookUnfinishedList(userId)))
                 .flatMapMany(Flux::fromIterable);
     }
@@ -97,7 +97,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Flux<Book> books(ServerWebExchange exchange) {
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> {
                     List<Item> items = this.rakutenApiService.getBooks(env.getProperty("application.rakuten.genre-id"));
                     List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
@@ -117,7 +117,7 @@ public class BizToiApiImpl implements ApiApi {
                 .map(book -> this.queryService.insertBook(book)).then();
 
         Mono<Void> favoriteBook = exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> this.queryService.createLike(sendLikeInfo.getId(), "book", userId))
                 .then();
         return createBook.and(favoriteBook);
@@ -127,7 +127,7 @@ public class BizToiApiImpl implements ApiApi {
     public Mono<AnswerHead> getAnswerHead(String bookId, String answerHeadId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId, bookId, null, false))
                 .switchIfEmpty(Mono.empty());
     }
@@ -136,7 +136,7 @@ public class BizToiApiImpl implements ApiApi {
     public Flux<AnswerHead> getAnswerHeadList(String bookId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .map(userId ->
                         this.queryService.getAnswerHeadList(userId, bookId, 50, false))
                 .flatMapMany(Flux::fromIterable);
@@ -146,7 +146,7 @@ public class BizToiApiImpl implements ApiApi {
     public Mono<AnswerHead> getAnswerHeadMe(String bookId, String answerHeadId, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId))
                 .switchIfEmpty(Mono.fromRunnable(() -> {
                     exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -157,7 +157,7 @@ public class BizToiApiImpl implements ApiApi {
     public Mono<Void> deleteFavoriteBooks(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> this.queryService.deleteLike(sendLikeInfo.getId(), "book", userId))
                 .then();
     }
@@ -171,7 +171,7 @@ public class BizToiApiImpl implements ApiApi {
                 .map(book -> this.queryService.insertBook(book)).then();
 
         Mono<Void> favoriteAnswer = exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> this.queryService.createLike(sendLikeInfo.getId(), "answer", userId))
                 .then();
         return createBook.and(favoriteAnswer);
@@ -181,7 +181,7 @@ public class BizToiApiImpl implements ApiApi {
     public Mono<Void> deleteLikesAnswers(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> this.queryService.deleteLike(sendLikeInfo.getId(), "answer", userId))
                 .then();
     }
@@ -189,7 +189,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Flux<AnswerHead> getAnswerHeadMeList(String bookId, ServerWebExchange exchange) {
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .map(userId ->
                         this.queryService.getAnswerHeadList(userId, bookId, 50, true))
                 .flatMapMany(Flux::fromIterable);
@@ -198,7 +198,7 @@ public class BizToiApiImpl implements ApiApi {
     @Override
     public Flux<Answer> getAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, ServerWebExchange exchange) {
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .map(userId ->
                         this.queryService.getAnswerMeByQuestion(answerHeadId, questionId, userId))
                 .flatMapMany(Flux::fromIterable);
@@ -210,7 +210,7 @@ public class BizToiApiImpl implements ApiApi {
                 .map(BooksUtils::to)
                 .map(book -> this.queryService.insertBook(book)).then();
         Mono<Book> getBook = exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> {
                     List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
                     return BooksUtils.to(this.rakutenApiService.findBook(bookId))
@@ -241,7 +241,7 @@ public class BizToiApiImpl implements ApiApi {
     public Mono<AnswerHead> postAnswerHead(String bookId, @Valid AnswerHead answerHead, ServerWebExchange exchange) {
         log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> this.queryService.insertAnswerHead(bookId, userId));
     }
 
@@ -250,7 +250,7 @@ public class BizToiApiImpl implements ApiApi {
         log.info("path: {}", exchange.getRequest().getPath().toString());
 
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId))
                 .switchIfEmpty(Mono.fromRunnable(() -> {
                     exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -263,7 +263,7 @@ public class BizToiApiImpl implements ApiApi {
         log.info("path: {}", exchange.getRequest().getPath().toString());
 
         return exchange.getPrincipal()
-                .map(PrincipalUtils::getUserId)
+                .map(PrincipalUtils::getCognitoUserName)
                 .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId, bookId, null, true))
                 .switchIfEmpty(Mono.fromRunnable(() -> {
                     exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);

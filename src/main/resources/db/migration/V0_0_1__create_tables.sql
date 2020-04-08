@@ -41,7 +41,7 @@ create table if not exists answer_head
         constraint answer_head_pk
             primary key,
     book_id varchar(13),
-    user_id varchar(36) not null,
+    user_id varchar(100) not null,
     publish_flg varchar(1) default '1'::character varying not null,
     inserted timestamp default CURRENT_TIMESTAMP not null,
     modified timestamp default CURRENT_TIMESTAMP
@@ -67,10 +67,10 @@ create table if not exists answer
 
 create table if not exists likes
 (
-    user_id varchar(36) not null,
-    type varchar(20) not null,
+    user_id varchar(100) not null,
+    likes_type varchar(20) not null,
     foreign_id varchar(36) not null,
     inserted timestamp default CURRENT_TIMESTAMP not null,
     constraint likes_pk
-        primary key (user_id, type, foreign_id)
+        primary key (user_id, likes_type, foreign_id)
 );

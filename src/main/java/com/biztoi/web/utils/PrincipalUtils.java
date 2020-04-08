@@ -9,15 +9,17 @@ import java.security.Principal;
 public class PrincipalUtils {
     private static String SUB = "sub";
 
+    private static String USERNAME = "username";
+
     private static String NAME = "nickname";
 
     private static String EMAIL = "email";
 
     private static String PICTURE = "picture";
 
-    public static String getUserId(Principal p) {
+    public static String getCognitoUserName(Principal p) {
         final OAuth2User user = ((OAuth2AuthenticationToken) p).getPrincipal();
-        return user.getAttribute(SUB);
+        return user.getAttribute(USERNAME);
     }
 
     public static BizToiUser getBizToiUser(Principal p) {
