@@ -33,6 +33,9 @@ public class AWSCognitoUserPoolService {
     // TODO application 変数のConst化
     // TODO ユーザ情報の整理
     public BizToiUser getUser(final String userId) {
+        if (userId == null) {
+            return null;
+        }
         AWSCredentialsProvider awsCredentialsProvider = new ProfileCredentialsProvider(env.getProperty("application.aws.profile-name"));
         var client = AWSCognitoIdentityProviderClientBuilder.standard().withCredentials(awsCredentialsProvider).withRegion(Regions.AP_NORTHEAST_1).build();
         com.amazonaws.services.cognitoidp.model.AdminGetUserRequest adminGetUserRequest = new AdminGetUserRequest();
