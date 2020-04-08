@@ -18,7 +18,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static com.biztoi.Tables.*;
 import static java.util.stream.Collectors.toList;
@@ -34,6 +33,10 @@ public class DataQueryService {
     @NonNull
     Environment env;
 
+    @NonNull
+    AWSCognitoUserPoolService userPoolService;
+
+    // TODO 役割に応じてサービスを分離
     private static final Logger log = LoggerFactory.getLogger(DataQueryService.class);
 
     public Toi findToi() {
@@ -179,16 +182,6 @@ public class DataQueryService {
                                 .id(r.get(LIKES.FOREIGN_ID))));
     }
 
-    // TODO stub
-    public Map<String, BizToiUser> selectAllBizToiUserMock() {
-        final Map<String, BizToiUser> bizToiUserMap = new HashMap<>();
-        IntStream.range(0, 10).forEach(i -> bizToiUserMap.put(String.valueOf(i), new BizToiUser()
-                .id(UUID.randomUUID().toString())
-                .nickname("User NickName" + new Random().nextInt(11)).country("ja").pictureUrl("https://picsum.photos/20" + new Random().nextInt(9))
-        ));
-        return bizToiUserMap;
-    }
-
     public void deleteAnswers(AnswerList answers) {
         answers.getAnswers().forEach(answer ->
                 this.dsl.deleteFrom(ANSWER).where(ANSWER.ID.eq(answer.getId())).execute());
@@ -236,9 +229,8 @@ public class DataQueryService {
 
     }
 
-    public Mono<AnswerHead> getAnswerHead(String answerHeadId, String userId) {
+    public Mono<AnswerHead> getAnswerHead(final String answerHeadId, final String userId) {
         final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer(userId);
-        final Map<String, BizToiUser> bizToiUserMap = this.selectAllBizToiUserMock();
 
         Result<Record> records = this.dsl.select().from(ANSWER_HEAD).leftJoin(ANSWER).on(ANSWER_HEAD.ID.eq(ANSWER.ANSWER_HEAD_ID))
                 .where(ANSWER_HEAD.ID.eq(answerHeadId)
@@ -248,8 +240,7 @@ public class DataQueryService {
                     final AnswerHead entity = this.mapToAnswerHead(recordList.get(0));
                     entity.setAnswers(recordList.stream().filter(r -> r.get(ANSWER.ID) != null).map(this::mapToAnswer).collect(toList()));
                     entity.setLikeInfo(answerLikesMap.getOrDefault(entity.getId(), new AnswerLikes().active(false).sum(0)));
-                    // TODO userInfoがStubなので修正
-                    entity.setUserInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null));
+                    entity.setUserInfo(userPoolService.getUser(recordList.get(0).get(ANSWER_HEAD.USER_ID)));
                     return entity;
                 }).findFirst().orElse(null);
         return (result != null) ? Mono.just(result) : Mono.empty();
@@ -264,7 +255,6 @@ public class DataQueryService {
 
     public List<AnswerHead> getAnswerHeadList(String userId, String bookId, Integer limit, boolean hasUser) {
         final Map<String, AnswerLikes> answerLikesMap = this.selectAllLikesAnswer(userId);
-        final Map<String, BizToiUser> bizToiUserMap = this.selectAllBizToiUserMock();
 
         Result<Record> records = this.dsl.select().from(ANSWER_HEAD).join(ANSWER).on(ANSWER_HEAD.ID.eq(ANSWER.ANSWER_HEAD_ID))
                 .where(ANSWER_HEAD.BOOK_ID.eq(bookId).and(hasUser ? ANSWER_HEAD.USER_ID.eq(userId) : DSL.noCondition()))
@@ -274,8 +264,7 @@ public class DataQueryService {
                     final AnswerHead entity = this.mapToAnswerHead(recordList.get(0));
                     entity.setAnswers(recordList.stream().filter(r -> r.get(ANSWER.ID) != null).map(this::mapToAnswer).collect(toList()));
                     entity.setLikeInfo(answerLikesMap.getOrDefault(entity.getId(), new AnswerLikes().active(false).sum(0)));
-                    // TODO userInfoがStubなので修正
-                    entity.setUserInfo(bizToiUserMap.getOrDefault(String.valueOf(new Random().nextInt(11)), null));
+                    entity.setUserInfo(userPoolService.getUser(recordList.get(0).get(ANSWER_HEAD.USER_ID)));
                     return entity;
                 }).collect(toList());
     }

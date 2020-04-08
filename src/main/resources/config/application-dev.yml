@@ -30,6 +30,9 @@ server:
 
 application:
   front-url: http://localhost:3000
+  aws:
+    profile-name: "cognito-admin"
+    user-pool-id: "ap-northeast-1_ccxqYNJs0"
   rakuten:
     app-id: "1035252894012359396"
     genre-id: "001006"

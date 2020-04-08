@@ -7,15 +7,16 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.security.Principal;
 
 public class PrincipalUtils {
-    private static String SUB = "sub";
 
-    private static String USERNAME = "username";
+    public static String SUB = "sub";
 
-    private static String NAME = "nickname";
+    public static String USERNAME = "username";
 
-    private static String EMAIL = "email";
+    public static String NICKNAME = "nickname";
 
-    private static String PICTURE = "picture";
+    public static String EMAIL = "email";
+
+    public static String PICTURE = "picture";
 
     public static String getCognitoUserName(Principal p) {
         final OAuth2User user = ((OAuth2AuthenticationToken) p).getPrincipal();
@@ -26,7 +27,7 @@ public class PrincipalUtils {
         final OAuth2User user = ((OAuth2AuthenticationToken) p).getPrincipal();
         return new BizToiUser()
                 .id(user.getAttribute(SUB))
-                .nickname(user.getAttribute(NAME))
+                .nickname(user.getAttribute(NICKNAME))
                 .pictureUrl(user.getAttribute(PICTURE))
                 .email(user.getAttribute(EMAIL));
     }
