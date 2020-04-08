@@ -36,10 +36,10 @@ public class AWSCognitoUserPoolService {
         if (userId == null) {
             return null;
         }
-        AWSCredentialsProvider awsCredentialsProvider = new ProfileCredentialsProvider(env.getProperty("application.aws.profile-name"));
+        AWSCredentialsProvider awsCredentialsProvider = new ProfileCredentialsProvider(env.getProperty("application.aws.profile"));
         var client = AWSCognitoIdentityProviderClientBuilder.standard().withCredentials(awsCredentialsProvider).withRegion(Regions.AP_NORTHEAST_1).build();
         com.amazonaws.services.cognitoidp.model.AdminGetUserRequest adminGetUserRequest = new AdminGetUserRequest();
-        adminGetUserRequest.withUserPoolId(env.getProperty("application.aws.user-pool-id")).withUsername(userId);
+        adminGetUserRequest.withUserPoolId(env.getProperty("application.aws.pool")).withUsername(userId);
         var response = client.adminGetUser(adminGetUserRequest);
         log.info(response.getUserAttributes().toString());
 

@@ -26,7 +26,7 @@ public class PrincipalUtils {
     public static BizToiUser getBizToiUser(Principal p) {
         final OAuth2User user = ((OAuth2AuthenticationToken) p).getPrincipal();
         return new BizToiUser()
-                .id(user.getAttribute(SUB))
+                .id(user.getAttribute(USERNAME))
                 .nickname(user.getAttribute(NICKNAME))
                 .pictureUrl(user.getAttribute(PICTURE))
                 .email(user.getAttribute(EMAIL));
