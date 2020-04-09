@@ -1,7 +1,7 @@
 package com.biztoi.web.service;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
@@ -36,9 +36,8 @@ public class AWSCognitoUserPoolService {
         if (userId == null) {
             return null;
         }
-        // TODO 環境変数
-        AWSCredentialsProvider awsCredentialsProvider = new ProfileCredentialsProvider( "cognito-admin");
-        var client = AWSCognitoIdentityProviderClientBuilder.standard().withCredentials(awsCredentialsProvider).withRegion(Regions.AP_NORTHEAST_1).build();
+        var credentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(env.getProperty("aws.accessKeyId"), env.getProperty("aws.secretKey")));
+        var client = AWSCognitoIdentityProviderClientBuilder.standard().withCredentials(credentialsProvider).withRegion(Regions.AP_NORTHEAST_1).build();
         com.amazonaws.services.cognitoidp.model.AdminGetUserRequest adminGetUserRequest = new AdminGetUserRequest();
         adminGetUserRequest.withUserPoolId(env.getProperty("application.aws.pool")).withUsername(userId);
         var response = client.adminGetUser(adminGetUserRequest);
