@@ -16,11 +16,15 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler;
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler;
-import org.springframework.security.web.server.authentication.logout.HttpStatusReturningServerLogoutSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.SecurityContextServerLogoutHandler;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import org.springframework.web.reactive.config.EnableWebFlux;
+
+import java.net.URI;
 
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -45,8 +49,14 @@ public class SecurityConfig {
                 .authenticationSuccessHandler(
                         new RedirectServerAuthenticationSuccessHandler(env.getProperty("application.front-url", "http://localhost:3000") + "/top"))
                 .authenticationFailureHandler(new RedirectServerAuthenticationFailureHandler("/oauth2/authorization/biztoi"));
+
+        var logout = new RedirectServerLogoutSuccessHandler();
+        logout.setLogoutSuccessUrl(URI.create(env.getProperty("application.front-url", "http://localhost:3000")));
+
         http.logout()
-                .logoutSuccessHandler(new HttpStatusReturningServerLogoutSuccessHandler(HttpStatus.OK));
+                .requiresLogout(ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, "/logout"))
+                .logoutHandler(new SecurityContextServerLogoutHandler())
+                .logoutSuccessHandler(logout);
         http.exceptionHandling()
                 .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED));
 
