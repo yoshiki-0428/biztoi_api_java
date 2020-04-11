@@ -26,6 +26,8 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 
 import java.net.URI;
 
+import static com.biztoi.web.config.ApplicationConst.FRONT_URL;
+
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Configuration
@@ -47,11 +49,11 @@ public class SecurityConfig {
                 .authenticationManager(new OidcAuthorizationCodeReactiveAuthenticationManagerCustom(
                         new WebClientReactiveAuthorizationCodeTokenResponseClient(), new OidcReactiveOAuth2UserService()))
                 .authenticationSuccessHandler(
-                        new RedirectServerAuthenticationSuccessHandler(env.getProperty("application.front-url", "http://localhost:3000") + "/top"))
+                        new RedirectServerAuthenticationSuccessHandler(env.getProperty(FRONT_URL, "http://localhost:3000") + "/top"))
                 .authenticationFailureHandler(new RedirectServerAuthenticationFailureHandler("/oauth2/authorization/biztoi"));
 
         var logout = new RedirectServerLogoutSuccessHandler();
-        logout.setLogoutSuccessUrl(URI.create(env.getProperty("application.front-url", "http://localhost:3000")));
+        logout.setLogoutSuccessUrl(URI.create(env.getProperty(FRONT_URL, "http://localhost:3000")));
 
         http.logout()
                 .requiresLogout(ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, "/logout"))
@@ -78,7 +80,7 @@ public class SecurityConfig {
         corsConfig.addAllowedMethod(HttpMethod.DELETE);
         corsConfig.addAllowedMethod(HttpMethod.GET);
         corsConfig.addAllowedMethod(HttpMethod.PUT);
-        corsConfig.addAllowedOrigin(env.getProperty("application.front-url", "http://localhost:3000"));
+        corsConfig.addAllowedOrigin(env.getProperty(FRONT_URL, "http://localhost:3000"));
         corsConfig.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =

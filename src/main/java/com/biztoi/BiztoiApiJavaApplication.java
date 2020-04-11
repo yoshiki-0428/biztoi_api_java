@@ -10,17 +10,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ServerWebExchange;
 
 import java.net.InetAddress;
-import java.net.URI;
 import java.net.UnknownHostException;
-import java.security.Principal;
 
-@RestController
+import static com.biztoi.web.config.ApplicationConst.*;
+
 @SpringBootApplication
 @EnableFeignClients
 @Slf4j
@@ -28,14 +23,6 @@ public class BiztoiApiJavaApplication {
 	private static final Logger log = LoggerFactory.getLogger(BiztoiApiJavaApplication.class);
 
 	private final Environment env;
-
-    @GetMapping("/")
-    public void index(Principal principal, ServerWebExchange exchange) {
-        log.info(principal.toString());
-        exchange.getResponse().setStatusCode(HttpStatus.MOVED_PERMANENTLY);
-        exchange.getResponse().getHeaders().setLocation(
-                URI.create(env.getProperty("application.front-url", "http://localhost:3000") + "/top"));
-    }
 
     public BiztoiApiJavaApplication(Environment env) {
 		this.env = env;
@@ -46,8 +33,8 @@ public class BiztoiApiJavaApplication {
 		DefaultProfileUtil.addDefaultProfile(app);
 		Environment env = app.run(args).getEnvironment();
 
-		Flyway flyway = Flyway.configure().dataSource(env.getProperty("spring.datasource.url"),
-				env.getProperty("spring.datasource.username"), env.getProperty("spring.datasource.password")).load();
+		Flyway flyway = Flyway.configure().dataSource(env.getProperty(SPRING_DATA_URL),
+				env.getProperty(SPRING_DATA_USER), env.getProperty(SPRING_DATA_PASS)).load();
 		flyway.migrate();
 		logApplicationStartup(env);
 	}

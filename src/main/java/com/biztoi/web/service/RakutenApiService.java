@@ -17,6 +17,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.biztoi.web.config.ApplicationConst.RAKUTEN_AFF_ID;
+import static com.biztoi.web.config.ApplicationConst.RAKUTEN_APP_ID;
+
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Service
@@ -31,7 +34,7 @@ public class RakutenApiService {
 
     public List<Item> getBooks(final String keyword, final String genre) {
         SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                env.getProperty("application.rakuten.app-id"), genre, env.getProperty("application.rakuten.aff-id"), null, keyword, null,
+                env.getProperty(RAKUTEN_APP_ID), genre, env.getProperty(RAKUTEN_AFF_ID), null, keyword, null,
                 null, "sales", null, null, null).getBody();
 
         return filter(searchInfo);
@@ -39,7 +42,7 @@ public class RakutenApiService {
 
     public Item findBook(String isbn) {
         SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                env.getProperty("application.rakuten.app-id"), "001", env.getProperty("application.rakuten.aff-id"), null, null, isbn,
+                env.getProperty(RAKUTEN_APP_ID), "001", env.getProperty(RAKUTEN_AFF_ID), null, null, isbn,
                 null, null, null, null, null).getBody();
         if (searchInfo == null || searchInfo.getItems() == null || searchInfo.getItems().size() == 0) {
             return null;

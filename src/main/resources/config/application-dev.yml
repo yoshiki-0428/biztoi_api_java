@@ -28,14 +28,11 @@ spring:
 server:
   port: 8000
 
-aws:
-  accessKeyId: XXXXXXYYYY
-  secretKey: AAAAAAAABBBBBBB
-
 application:
   front-url: http://localhost:3000
   aws:
-    profile: "cognito-admin"
+    accessKey: XXXXXXYYYY
+    secretKey: AAAAAAAABBBBBBB
     pool: "ap-northeast-1_ccxqYNJs0"
   rakuten:
     app-id: "1035252894012359396"

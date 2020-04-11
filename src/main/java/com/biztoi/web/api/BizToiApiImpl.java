@@ -25,6 +25,7 @@ import reactor.core.publisher.Mono;
 import javax.validation.Valid;
 import java.util.*;
 
+import static com.biztoi.web.config.ApplicationConst.RAKUTEN_GENRE_ID;
 import static java.util.stream.Collectors.toList;
 
 @Profile("!heroku")
@@ -99,7 +100,7 @@ public class BizToiApiImpl implements ApiApi {
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> {
-                    List<Item> items = this.rakutenApiService.getBooks(keyword, env.getProperty("application.rakuten.genre-id"));
+                    List<Item> items = this.rakutenApiService.getBooks(keyword, env.getProperty(RAKUTEN_GENRE_ID));
                     List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
                     return items.stream()
                             .map(BooksUtils::to)

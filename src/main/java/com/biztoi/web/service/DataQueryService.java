@@ -20,8 +20,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.biztoi.Tables.*;
+import static com.biztoi.web.config.ApplicationConst.RAKUTEN_GENRE_ID;
 import static java.util.stream.Collectors.toList;
 
+// TODO 役割に応じてサービスを分離
 @Service
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -36,7 +38,6 @@ public class DataQueryService {
     @NonNull
     AWSCognitoUserPoolService userPoolService;
 
-    // TODO 役割に応じてサービスを分離
     private static final Logger log = LoggerFactory.getLogger(DataQueryService.class);
 
     public Toi findToi() {
@@ -127,7 +128,7 @@ public class DataQueryService {
                 .collect(Collectors.groupingBy(x -> x, Collectors.counting())).entrySet();
         var recommendGenre = groupingEntrySet.stream().max(Map.Entry.comparingByValue());
 
-        return recommendGenre.isEmpty() ? BooksGenre.map.get(env.getProperty("application.rakuten.genre-id")) : recommendGenre.get().getKey();
+        return recommendGenre.isEmpty() ? BooksGenre.map.get(env.getProperty(RAKUTEN_GENRE_ID)) : recommendGenre.get().getKey();
     }
 
     // TODO リファクタ
