@@ -3,5 +3,3 @@ spring:
     allow-bean-definition-overriding: true
   jooq:
     sql-dialect: postgres
-  session:
-    timeout: 7D

@@ -19,18 +19,24 @@ import org.springframework.security.web.server.authentication.RedirectServerAuth
 import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.SecurityContextServerLogoutHandler;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import org.springframework.session.ReactiveMapSessionRepository;
+import org.springframework.session.ReactiveSessionRepository;
+import org.springframework.session.config.annotation.web.server.EnableSpringWebSession;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import org.springframework.web.reactive.config.EnableWebFlux;
 
 import java.net.URI;
+import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.biztoi.web.config.ApplicationConst.FRONT_URL;
 
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Configuration
+@EnableSpringWebSession
 @EnableWebFlux
 public class SecurityConfig {
 
@@ -89,4 +95,10 @@ public class SecurityConfig {
         return source;
     }
 
+    @Bean
+    public ReactiveSessionRepository reactiveSessionRepository() {
+        var session = new ReactiveMapSessionRepository(new ConcurrentHashMap<>());
+        session.setDefaultMaxInactiveInterval((int) Duration.ofDays(7).toSeconds());
+        return session;
+    }
 }
