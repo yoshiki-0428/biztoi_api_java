@@ -4,4 +4,4 @@ spring:
   jooq:
     sql-dialect: postgres
   session:
-    timeout: 8h
+    timeout: 7D
