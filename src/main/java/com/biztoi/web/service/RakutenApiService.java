@@ -29,9 +29,9 @@ public class RakutenApiService {
 
     private static final Logger log = LoggerFactory.getLogger(RakutenApiService.class);
 
-    public List<Item> getBooks(final String genre) {
+    public List<Item> getBooks(final String keyword, final String genre) {
         SearchInfo searchInfo = this.booksApiClient.getBooksTotal(
-                env.getProperty("application.rakuten.app-id"), genre, env.getProperty("application.rakuten.aff-id"), null, null, null,
+                env.getProperty("application.rakuten.app-id"), genre, env.getProperty("application.rakuten.aff-id"), null, keyword, null,
                 null, "sales", null, null, null).getBody();
 
         return filter(searchInfo);

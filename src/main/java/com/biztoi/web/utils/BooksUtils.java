@@ -17,7 +17,7 @@ public class BooksUtils {
                 .title(item.getTitle())
                 .detail(item.getItemCaption())
                 .pictureUrl(item.getMediumImageUrl())
-                .linkUrl(item.getItemUrl())
+                .linkUrl(item.getAffiliateUrl())
                 .authors(item.getAuthor() != null ? Arrays.asList(item.getAuthor().split("/")) : null)
                 .categories((item.getBooksGenreId() != null) ?
                         Arrays.stream(item.getBooksGenreId().split("/")).map(BooksGenre.map::get).collect(Collectors.toList()) : null)

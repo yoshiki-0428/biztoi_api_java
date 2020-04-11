@@ -78,7 +78,7 @@ public class BizToiApiImpl implements ApiApi {
                 .flatMap(userId -> Mono.just(this.queryService.bookRecommendList(userId)))
                 .map(BooksGenre.reverseMap::get)
                 .map(categoryId -> {
-                    List<Item> items = this.rakutenApiService.getBooks(categoryId);
+                    List<Item> items = this.rakutenApiService.getBooks(null, categoryId);
                     return items.stream()
                             .map(BooksUtils::to)
                             .collect(toList());
@@ -95,11 +95,11 @@ public class BizToiApiImpl implements ApiApi {
     }
 
     @Override
-    public Flux<Book> books(ServerWebExchange exchange) {
+    public Flux<Book> books(@Valid String keyword, ServerWebExchange exchange) {
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> {
-                    List<Item> items = this.rakutenApiService.getBooks(env.getProperty("application.rakuten.genre-id"));
+                    List<Item> items = this.rakutenApiService.getBooks(keyword, env.getProperty("application.rakuten.genre-id"));
                     List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
                     return items.stream()
                             .map(BooksUtils::to)
