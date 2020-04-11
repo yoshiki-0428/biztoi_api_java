@@ -6,7 +6,6 @@ import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -15,11 +14,19 @@ import org.springframework.security.oauth2.client.endpoint.WebClientReactiveAuth
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcReactiveOAuth2UserService;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
-import org.springframework.security.web.server.authentication.logout.HttpStatusReturningServerLogoutSuccessHandler;
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler;
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.SecurityContextServerLogoutHandler;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import org.springframework.web.reactive.config.EnableWebFlux;
+
+import java.net.URI;
+
+import static com.biztoi.web.config.ApplicationConst.FRONT_URL;
 
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -30,7 +37,6 @@ public class SecurityConfig {
     @NonNull
     Environment env;
 
-    @Profile("!heroku")
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         // Disable default security.
@@ -41,9 +47,18 @@ public class SecurityConfig {
         // OAuth2
         http.oauth2Login()
                 .authenticationManager(new OidcAuthorizationCodeReactiveAuthenticationManagerCustom(
-                        new WebClientReactiveAuthorizationCodeTokenResponseClient(), new OidcReactiveOAuth2UserService()));
+                        new WebClientReactiveAuthorizationCodeTokenResponseClient(), new OidcReactiveOAuth2UserService()))
+                .authenticationSuccessHandler(
+                        new RedirectServerAuthenticationSuccessHandler(env.getProperty(FRONT_URL, "http://localhost:3000") + "/top"))
+                .authenticationFailureHandler(new RedirectServerAuthenticationFailureHandler("/oauth2/authorization/biztoi"));
+
+        var logout = new RedirectServerLogoutSuccessHandler();
+        logout.setLogoutSuccessUrl(URI.create(env.getProperty(FRONT_URL, "http://localhost:3000")));
+
         http.logout()
-                .logoutSuccessHandler(new HttpStatusReturningServerLogoutSuccessHandler(HttpStatus.OK));
+                .requiresLogout(ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, "/logout"))
+                .logoutHandler(new SecurityContextServerLogoutHandler())
+                .logoutSuccessHandler(logout);
         http.exceptionHandling()
                 .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED));
 
@@ -55,25 +70,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Profile("heroku")
-    @Bean
-    public SecurityWebFilterChain securityWebFilterChainHeroku(ServerHttpSecurity http) {
-        // Disable default security.
-        http.httpBasic().disable();
-        http.formLogin().disable();
-        http.csrf().disable();
-
-        // OAuth2
-        http.oauth2Login();
-        http.logout();
-
-        // authentication
-        http.authorizeExchange().pathMatchers("/**/**").permitAll();
-        http.authorizeExchange().anyExchange().authenticated();
-        return http.build();
-    }
-
-    @Profile("!heroku")
     @Bean
     CorsConfigurationSource corsConfiguration() {
         // CORS設定(RESTで認証させる場合は必要）
@@ -84,27 +80,7 @@ public class SecurityConfig {
         corsConfig.addAllowedMethod(HttpMethod.DELETE);
         corsConfig.addAllowedMethod(HttpMethod.GET);
         corsConfig.addAllowedMethod(HttpMethod.PUT);
-        corsConfig.addAllowedOrigin(env.getProperty("application.front-url", "http://localhost:3000"));
-        corsConfig.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfig);
-        return source;
-    }
-
-    @Profile("heroku")
-    @Bean
-    CorsConfigurationSource corsConfigurationHeroku() {
-        // CORS設定(RESTで認証させる場合は必要）
-        CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.applyPermitDefaultValues();
-        corsConfig.addAllowedMethod(HttpMethod.OPTIONS);
-        corsConfig.addAllowedMethod(HttpMethod.POST);
-        corsConfig.addAllowedMethod(HttpMethod.DELETE);
-        corsConfig.addAllowedMethod(HttpMethod.GET);
-        corsConfig.addAllowedMethod(HttpMethod.PUT);
-        corsConfig.addAllowedOrigin("*");
+        corsConfig.addAllowedOrigin(env.getProperty(FRONT_URL, "http://localhost:3000"));
         corsConfig.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
