@@ -100,7 +100,7 @@ public class BizToiApiImpl implements ApiApi {
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> {
-                    List<Item> items = this.rakutenApiService.getBooks(keyword, env.getProperty(RAKUTEN_GENRE_ID));
+                    List<Item> items = this.rakutenApiService.getBooks(keyword, (keyword != null) ? "001" : env.getProperty(RAKUTEN_GENRE_ID));
                     List<String> bookFavList = this.queryService.isFavoriteBooks(userId);
                     return items.stream()
                             .map(BooksUtils::to)
