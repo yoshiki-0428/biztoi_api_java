@@ -112,7 +112,6 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Mono<Void> favoriteBooks(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         Mono<Void> createBook = Mono.just(this.rakutenApiService.findBook(sendLikeInfo.getId()))
                 .map(BooksUtils::to)
                 .map(book -> this.queryService.insertBook(book)).then();
@@ -126,7 +125,6 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Mono<AnswerHead> getAnswerHead(String bookId, String answerHeadId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getCognitoUserName)
                 .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId, bookId, null, false))
@@ -135,7 +133,6 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Flux<AnswerHead> getAnswerHeadList(String bookId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getCognitoUserName)
                 .map(userId ->
@@ -145,7 +142,6 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Mono<AnswerHead> getAnswerHeadMe(String bookId, String answerHeadId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getCognitoUserName)
                 .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId))
@@ -156,7 +152,6 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Mono<Void> deleteFavoriteBooks(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> this.queryService.deleteLike(sendLikeInfo.getId(), "book", userId))
@@ -165,7 +160,6 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Mono<Void> likesAnswers(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         Mono<Void> createBook = this.queryService.findAnswerHead(sendLikeInfo.getId())
                 .map(answerHead -> this.rakutenApiService.findBook(answerHead.getBookId()))
                 .map(BooksUtils::to)
@@ -180,7 +174,6 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Mono<Void> deleteLikesAnswers(@Valid SendLikeInfo sendLikeInfo, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> this.queryService.deleteLike(sendLikeInfo.getId(), "answer", userId))
@@ -222,25 +215,21 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Mono<Question> getBookQuestion(String bookId, String questionId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return Mono.just(this.queryService.findQuestion(questionId));
     }
 
     @Override
     public Flux<Question> getBookQuestions(String bookId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return Flux.fromIterable(this.queryService.findQuestionsAll());
     }
 
     @Override
     public Mono<Toi> getBookToi(String bookId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return Mono.just(this.queryService.findToi());
     }
 
     @Override
     public Mono<AnswerHead> postAnswerHead(String bookId, @Valid AnswerHead answerHead, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getCognitoUserName)
                 .map(userId -> this.queryService.insertAnswerHead(bookId, userId));
@@ -248,8 +237,6 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Flux<Answer> postAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid AnswerList answerList, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
-
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getCognitoUserName)
                 .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId))
@@ -261,8 +248,6 @@ public class BizToiApiImpl implements ApiApi {
 
     @Override
     public Mono<Void> deleteAnswerMeByQuestion(String bookId, String answerHeadId, String questionId, @Valid AnswerList answerList, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
-
         return exchange.getPrincipal()
                 .map(PrincipalUtils::getCognitoUserName)
                 .flatMap(userId -> this.queryService.getAnswerHead(answerHeadId, userId, bookId, null, true))
@@ -276,21 +261,18 @@ public class BizToiApiImpl implements ApiApi {
     // 未使用
     @Override
     public Mono<Void> booksPost(@Valid Book book, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return null;
     }
 
     // 未使用
     @Override
     public Mono<Void> postQuestion(String bookId, @Valid Question question, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return null;
     }
 
     // 未使用
     @Override
     public Mono<Toi> postToi(String bookId, @Valid Toi toi, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
         return null;
     }
 
