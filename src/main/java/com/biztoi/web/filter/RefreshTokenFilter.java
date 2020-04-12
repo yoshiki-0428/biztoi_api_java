@@ -34,10 +34,11 @@ public class RefreshTokenFilter implements WebFilter {
         var refresh = exchange.getPrincipal()
                 .filter(principal -> principal instanceof OAuth2AuthenticationToken)
                 .cast(OAuth2AuthenticationToken.class)
-                .flatMap(this::authorizeClient)
-                .map(OAuth2AuthorizedClient::getAccessToken)
-                .map(token -> withBearerAuth(exchange, token))
-                .defaultIfEmpty(exchange).flatMap(chain::filter);
+                .flatMap(this::authorizeClient);
+//                .map(OAuth2AuthorizedClient::getAccessToken)
+//                .map(token -> withBearerAuth(exchange, token))
+//                .defaultIfEmpty(Mono.empty())
+//                .flatMap(chain::filter);
         return chain.filter(exchange).and(refresh);
     }
 
