@@ -8,3 +8,23 @@ jobs:
       - run: docker login registry.gitlab.com -u $DOCKER_USER_GITLAB -p $DOCKER_PASS_GITLAB
       - run: docker build -t registry.gitlab.com/$DOCKER_USER_GITLAB/biztoi_api_java/$CIRCLE_BRANCH .
       - run: docker push registry.gitlab.com/$DOCKER_USER_GITLAB/biztoi_api_java/$CIRCLE_BRANCH
+
+  deploy:
+    machine: true
+    steps:
+      - checkout
+      - add_ssh_keys:
+      - run: ssh ${EC2_USER_NAME}@${HOST_NAME} 'sudo /usr/local/bin/docker-compose pull && sudo /usr/local/bin/docker-compose up -d'
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+
