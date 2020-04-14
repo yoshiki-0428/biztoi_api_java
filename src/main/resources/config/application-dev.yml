@@ -31,8 +31,8 @@ server:
 application:
   front-url: http://localhost:3000
   aws:
-    accessKey: AKIAY5VJ52Y6JCAQASWB
-    secretKey: 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
+    accessKey: XXXXXXXXXXX
+    secretKey: BBBBBBBBBBBBBBB
     pool: "ap-northeast-1_ccxqYNJs0"
   rakuten:
     app-id: "1035252894012359396"
