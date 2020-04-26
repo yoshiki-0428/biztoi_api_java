@@ -20,7 +20,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -155,15 +154,14 @@ public class BizToiApiImplStub implements ApiApi {
     }
 
     @Override
-    public Mono<Question> getBookQuestion(String bookId, String questionId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
-        return Mono.just(this.queryService.findQuestion(questionId));
+    public Mono<Question> getBookQuestion(String bookId, String questionId, @Valid String patternId, ServerWebExchange exchange) {
+        return Mono.just(this.queryService.findQuestion(questionId, "0"));
     }
 
     @Override
-    public Flux<Question> getBookQuestions(String bookId, ServerWebExchange exchange) {
-        log.info("path: {}", exchange.getRequest().getPath().toString());
-        return Flux.fromIterable(this.queryService.findQuestionsAll());
+    public Flux<Question> getBookQuestions(String bookId, @Valid String patternId, ServerWebExchange exchange) {
+        String pattern = "0";
+        return Flux.fromIterable(this.queryService.findQuestionsAll(pattern));
     }
 
     @Override

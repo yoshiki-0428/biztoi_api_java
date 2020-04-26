@@ -45,8 +45,9 @@ public class DataQueryService {
         return new Toi().title(record.getTitle()).detail(record.getDetail()).publishFlg(true);
     }
 
-    public List<Question> findQuestionsAll() {
-        return this.dsl.selectFrom(MST_QUESTION).where(MST_QUESTION.PATTERN_ID.eq(0)).orderBy(MST_QUESTION.ORDER_ID)
+    public List<Question> findQuestionsAll(final String pattern) {
+        var patternCond = pattern != null ? MST_QUESTION.PATTERN_ID.eq(Integer.valueOf(pattern)) : DSL.noCondition();
+        return this.dsl.selectFrom(MST_QUESTION).where(patternCond).orderBy(MST_QUESTION.ORDER_ID)
                 .fetch().stream().map(record -> new Question()
                         .title(record.getTitle()).detail(record.getDetail()).id(record.getId())
                         .orderId(record.getOrderId()).patternId(record.getPatternId()).example(record.getExample())
@@ -54,8 +55,9 @@ public class DataQueryService {
                 .collect(toList());
     }
 
-    public Question findQuestion(String questionId) {
-        MstQuestionRecord record = this.dsl.selectFrom(MST_QUESTION).where(MST_QUESTION.PATTERN_ID.eq(0)
+    public Question findQuestion(String questionId, String pattern) {
+        var patternCond = pattern != null ? MST_QUESTION.PATTERN_ID.eq(Integer.valueOf(pattern)) : DSL.noCondition();
+        MstQuestionRecord record = this.dsl.selectFrom(MST_QUESTION).where(patternCond
                 .and(MST_QUESTION.ID.eq(questionId))).fetchOne();
         return new Question().title(record.getTitle()).detail(record.getDetail()).id(record.getId())
                 .orderId(record.getOrderId()).patternId(record.getPatternId())

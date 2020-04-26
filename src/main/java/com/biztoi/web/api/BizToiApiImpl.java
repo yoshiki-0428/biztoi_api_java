@@ -214,13 +214,13 @@ public class BizToiApiImpl implements ApiApi {
     }
 
     @Override
-    public Mono<Question> getBookQuestion(String bookId, String questionId, ServerWebExchange exchange) {
-        return Mono.just(this.queryService.findQuestion(questionId));
+    public Mono<Question> getBookQuestion(String bookId, String questionId, @Valid String patternId, ServerWebExchange exchange) {
+        return Mono.just(this.queryService.findQuestion(questionId, patternId));
     }
 
     @Override
-    public Flux<Question> getBookQuestions(String bookId, ServerWebExchange exchange) {
-        return Flux.fromIterable(this.queryService.findQuestionsAll());
+    public Flux<Question> getBookQuestions(String bookId, @Valid String patternId, ServerWebExchange exchange) {
+        return Flux.fromIterable(this.queryService.findQuestionsAll(patternId));
     }
 
     @Override
